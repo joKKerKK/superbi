@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>fdp-superbi</artifactId>
+        <groupId>com.flipkart.fdp.superbi</groupId>
+        <version>0.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>background-refresher-api-adaptor</artifactId>
+    <name>background-refresher-api-adaptor</name>
+    <description>background-refresher-api-adaptor</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>background-refresher-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>cosmos-client</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
