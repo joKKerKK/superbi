@@ -1,0 +1,177 @@
+
+replicaCount: 10
+
+serviceAccount:
+  name: "fdp-superbi-subscription-prod-ci"
+
+serviceFullname: subscription
+
+podAnnotations:
+  fcp.k8s.mtl/mtl-config-map: mtl-config
+  fcp.k8s.mtl/cosmos-jmx: disabled
+  fcp.k8s.mtl/cosmos-statsd: disabled
+  fcp.k8s.mtl/cosmos-tail: disabled
+
+podVolumes:
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "3Gi"
+  - name: mtl-config
+    configMap:
+      name: mtl-config
+  - name: cosmos-tail-access-logs
+    emptyDir: { }
+  - name: google-cloud-key
+    secret:
+      secretName: bq-key
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-subscription/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-subscription/server.yaml
+    name: app-config
+    subPath: server.yaml
+  - mountPath: /var/log/access-logs
+    name: cosmos-tail-access-logs
+  - name: google-cloud-key
+    mountPath: /var/secrets/google
+
+image:
+  mtl-sidecar:
+    registry: jfrog.fkinternal.com
+    repository: mtl/mtl-agent
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "0.4.11"
+
+serviceAnnotations:
+  fcp/app-id: prod-fdp-subscription
+  elb.fcp/name: subscription.fdp-superbi-subscription-prod.fkcloud.in
+  elb.fcp/backend-service: subscription.fdp-superbi-subscription-prod.fkcloud.in
+  elb.fcp/frontend-port: "80"
+  elb.fcp/backend-port: "21212"
+  elb.fcp/health-check-port: "21212"
+  elb.fcp/health-check-path: /health
+  elb.fcp/health-check-timeout: 1s
+  elb.fcp/health-check-interval: 5s
+  elb.fcp/load-balancing-algorithm: "leastconn"
+  elb.fcp/do-not-delete-vip: "true"
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms10g -Xmx10g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: fdp-subscription-gcp
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /var/secrets/google/key.json
+
+secrets:
+  bq-key:
+    key.json: eyJkYXRhIjoidmF1bHQ6djE6R0FsL2xDWnBTcThSZW91ODRIRFNLejNyaS9BdFZ6cE5JdnpsY2RNcmp1Y2tXT0puS2RpVVpLSUpLVEVha0FzZzRwQmZOd3VReXNQbWNJVnZFNWhqcVZOSWJmSElydEFqc25YTVZ1Zm9yTDlsb09kNWNmUzFuclFiTHhRYjJTNWZZU1N1RGVQM2FjMG5BbHhwOGhVU2RvU0RhYVFCYU4yaUhrUWhkUitSUXh6QnpSbnFBNWNScHVvUHVsUXdGb1F3dHg0MnFVZk0xVFUzVHlOaC84c2ZOczR0SGdwUHFhRjZWeDZRbDZuWXh0dHFpL3ZzWkdSNVdxcmxDcnIzaDRVNnJPV09NQzVmbnMvYzkvdXFLSlpVTDZEdi9zdEFpeFcwWVMrZFByTWFmSkswRDZKWnNURWptcTRwcjg3ZVJNUkVyZkwwa0YrSVFxdWw1NUFJWVR6NDZjaGFBeWtVTVVaQTdGS2tUV3pDN2k0bkk2dlBMWTdtd1YxUjNnL1cxR25kdVB4VGpMV1pNbVVESEVVMnlOMWtCZmlBQ3BSdWFrUWJTa3hFbUpkcDVERDlPSDZaZGN2blJtWFFON3IwRTk1M1NpNk5mMUtqSHZSRjhVRUFFOXZSOUdBdlVBL0NGOEFNeDBPT01FWmYrSFk5UlUyejh1ZzdDallNd25qVUQ4dzVBWWpzV280N0FZUVMvSmp2dlFYeTZ3ZFgzaWtCTEdLSTNCY1BoaU02R1UzNE1KSjlGS1JnSTdSeHNMR3doZTk0M0ljbFFjU1FxOW1TUUEzWlNUN2F0NFJLeEZuK21Dc1FMYTFqNlRTUWtpSkFhU1dUWlBCajI3cmY1YmdvYWU5TDRkaUdJRkdLbk8wS1BpRkN2c0hjWXQ2ME1IZHlQeXpzVlUzS04vYm5Ub3gvekFKTEhSaDJGUHVWbytyeDVXdHlidUE2N01BWkRIUjVud3pFTFlaTzJ5MkRZOG8raDQ2Y1BIRkZFT1p3ZnN4bWY0d01GNmhxMS9HWXdtNFYrQUdvMHZGRUhHZ0EvcDhMOGQ2ekRyMGNmK1loQ0RUeWQ2eWgwRE5lTGVqUnA4NjdCSnE1UnRHaEVBS3U3bzhBRkoxTXNaVnFmamc4TFJGbFpTMnY1SzZnWlBqWGx6am53ZnRQcGZvQjIzTDBBcS9PRjE2KzNuYkd0RmVkTDhlZzRzZWdMamNtejBuWWlEUjRnQVloRFRPZHkwa2hibXFRNUlHWS94bWlsL3RzQk1pYXBhVzVRMGxiTVQ2eDNLQUtEYjRFWWxpQmRsWmtOdUpQU3dUTWhvNTlPL3VYRW1PT1A2VXlGeTBpQlhxL3dleEU0blpNeDJrbTRnN1BrWVVBTDBZYlk5NUVsQ09YMmoxNS9rNkhiMkc0elJPOXpuaGEwd1BBaHJOUmNOY1J2ZnNBN25HcHU0ZVBmYkJycVdSeG1DSTM0bXNoYmdHWHFJV0IwM3VmMGg4RHhaVWlnb0hCTjR0Vk9qeTJYbDFDdVpSUXNaYkNlVno5SURsbE1tWmwwOGlaeGdnUjU1N2hLbXFnUlFFbXEzZ014OGx0bHRrOTAwbW5DTkZ1aVRQVjAxZEZMYm5xS3htc21TQkRGRGUyR01xMXNhOFp1QlE4WjN4aThhNFJYQT09Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpnY3Bfd2lmX2NvbmZpZ19icnYyIn0=
+
+resources:
+  limits:
+    cpu: 3
+    memory: 14Gi
+  requests:
+    cpu: 3
+    memory: 14Gi
+
+configs:
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.subscription.audit.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.subscription.resources"
+
+      environmentConfig:
+        env: prod
+
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-subscription/server/remove-this-file-to-bbr
+
+    config.json: |
+      {
+      }
+
+sidecars:
+  mtl-sidecar:
+    imageRef: mtl-sidecar
+    volumeMounts:
+      - name: mtl-config
+        mountPath: /etc/default/mtl-config/mtl-config-map
+      - name: cosmos-tail-access-logs
+        mountPath: /var/log/access-logs
+    resources:
+      limits:
+        cpu: 200m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+    env:
+      - name: COSMOS_TAIL_ENABLED
+        value: "true"
+      - name: COSMOS_STATSD_ENABLED
+        value: "false"
+      - name: COSMOS_JMX_ENABLED
+        value: "true"

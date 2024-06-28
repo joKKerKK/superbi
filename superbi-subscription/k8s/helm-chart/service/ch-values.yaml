@@ -1,0 +1,79 @@
+
+image:
+  cfgsvc-dns-proxy:
+    registry: container-registry.alm.fkcloud.in
+    repository: hosts-populator/cfgsvc-dns-proxy
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v0.1.0"
+
+serviceAccount:
+  name: "superbi-subscription-ci"
+
+podVolumes:
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: hosts-populator-keys
+    configMap:
+      name: hosts-populator-keys
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "3Gi"
+
+serviceAnnotations:
+  fcp/app-id: prod-fdp-subscription
+  elb.fcp/name: prod-fdp-subscription
+  elb.fcp/backend-service: prod-fdp-subscription
+  elb.fcp/frontend-port: "80"
+  elb.fcp/backend-port: "21212"
+  elb.fcp/health-check-port: "21212"
+  elb.fcp/health-check-path: /health
+  elb.fcp/health-check-timeout: 1s
+  elb.fcp/health-check-interval: 5s
+  elb.fcp/load-balancing-algorithm: "leastconn"
+  elb.fcp/do-not-delete-vip: "true"
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-subscription/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-subscription/server.yaml
+    name: app-config
+    subPath: server.yaml
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms10g -Xmx10g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: fdp-subscription-gcp-test
+
+configs:
+  hosts-populator-keys:
+    k8s-fpg-hp.conf: "prod-fdp-galaxy-hostnames"
+
+sidecars:
+  cfgsvc-dns-proxy:
+    imageRef: cfgsvc-dns-proxy
+
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 8797
+      capabilities:
+        add:
+          - NET_BIND_SERVICE
+
+    volumeMounts:
+      - mountPath: /usr/local/hosts-populator/buckets
+        name: hosts-populator-keys
+
+    resources:
+      limits:
+        cpu: 50m
+        memory: 64Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi

@@ -1,0 +1,14 @@
+
+[template]
+
+prefix = "/___CONFIG_SERVICE_BUCKET___"                         # Bucket name that you have defined in config-service
+
+src = "config.yml.tmpl"                                     # Source template name
+
+dest = "/etc/service/___PACKAGE___/___PACKAGE___.yml"                # Destination where you want to copy the generated file (with name and extension)
+
+keys = [
+    "/swagger.subscription.resourcePackage",                                      # Keys that you are using inside the source template (Must start with "/" and must be declared here)
+    "/environmentConfig.env",
+    "/superbi.subscription.oorFlagFilePath"
+]

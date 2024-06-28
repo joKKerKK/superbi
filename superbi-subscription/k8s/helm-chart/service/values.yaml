@@ -1,0 +1,235 @@
+# Default values for service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 4
+
+imageRef: fdp-superbi-subscription
+
+image:
+  fdp-superbi-subscription:
+    registry: jfrog.fkinternal.com
+    repository: fdp-ssi/fdp-superbi-subscription
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+
+pdb:
+  create: false
+  minAvailable: 25%
+
+podAnnotations:
+  fcp.k8s.mtl/mtl-config-map: mtl-config
+  fcp.k8s.mtl/cosmos-jmx: enabled
+  fcp.k8s.mtl/cosmos-statsd: disabled
+  fcp.k8s.mtl/cosmos-tail: enabled
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-subscription/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-subscription/server.yaml
+    name: app-config
+    subPath: server.yaml
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 914299
+
+service:
+  type: LoadBalancer
+  port: 21212
+  targetport: 21212
+
+ports:
+  - name: admin-port
+    containerPort: 21218
+    protocol: TCP
+  - name: service-port
+    containerPort: 21212
+
+livenessProbe:
+  tcpSocket:
+    port: admin-port
+  initialDelaySeconds: 60
+  periodSeconds: 20
+  failureThreshold: 25
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: service-port
+  initialDelaySeconds: 60
+  periodSeconds: 20
+  failureThreshold: 25
+
+
+lifecycle:
+  preStop:
+    exec:
+      command: [
+          "sh", "-c", "sleep 10 "
+      ]
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms10g -Xmx10g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: prod-fdp-hydra
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /var/secrets/google/wif-config.json
+
+resources:
+  limits:
+    cpu: 5
+    memory: 16Gi
+  requests:
+    cpu: 5
+    memory: 16Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 5
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 65
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configs:
+  mtl-config:
+    cosmos-jmx.json: |
+      {
+          "servers": [
+            {
+              "port": "21214",
+              "host": "localhost",
+              "process": "service",
+              "customTags": "env=prod",
+              "queries": [
+                {
+                  "obj": "*",
+                  "saperator": "."
+                }
+              ],
+              "numQueryThreads": 2
+            }
+          ]
+        }
+    cosmos-tail.yml: |
+      application: "prod"
+      file: "/var/log/access-logs/access.log"
+      requestLinePosition: 5
+      statusCodePosition: 6
+      sizePosition: 7
+      responseTimePosition: 10
+      multiplier: 1
+      role: "app"
+      ignoreUrls: /health,/ping
+
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.subscription.audit.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.subscription.resources"
+
+      environmentConfig:
+        env: prod
+
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-subscription/server/remove-this-file-to-bbr
+
+    config.json: |
+      {
+      }

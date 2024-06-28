@@ -1,0 +1,135 @@
+replicaCount: 1
+
+serviceAccount:
+  name: "fdp-superbi-subscription-preprod-ci"
+
+serviceFullname: subscription
+
+serviceAnnotations:
+  fcp/app-id: stage-fdp-subscription
+  elb.fcp/name: subscription.fdp-superbi-subscription-preprod.fkcloud.in
+  elb.fcp/backend-service: subscription.fdp-superbi-subscription-preprod.fkcloud.in
+  elb.fcp/frontend-port: "80"
+  elb.fcp/backend-port: "21212"
+  elb.fcp/health-check-port: "21212"
+  elb.fcp/health-check-path: /health
+  elb.fcp/health-check-timeout: 1s
+  elb.fcp/health-check-interval: 5s
+  elb.fcp/load-balancing-algorithm: "leastconn"
+  elb.fcp/do-not-delete-vip: "true"
+
+podVolumes:
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "3Gi"
+  - name: mtl-config
+    configMap:
+      name: mtl-config
+  - name: cosmos-tail-access-logs
+    emptyDir: { }
+  - name: google-cloud-key
+    secret:
+      secretName: bq-key
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-subscription/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-subscription/server.yaml
+    name: app-config
+    subPath: server.yaml
+  - mountPath: /var/log/access-logs
+    name: cosmos-tail-access-logs
+  - name: google-cloud-key
+    mountPath: /var/secrets/google
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms10g -Xmx10g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: kaas
+  - name: CONFIG_BUCKET
+    value: fdp-subscription-gcp-stage
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /var/secrets/google/key.json
+
+resources:
+  limits:
+    cpu: 3
+    memory: 14Gi
+  requests:
+    cpu: 3
+    memory: 14Gi
+
+secrets:
+  bq-key:
+    key.json: eyJkYXRhIjoidmF1bHQ6djE6Uk1JN3haOFZ6UUMzV2Q3WjJ2V1ZYa3FVL3VVc1lDc2dPSThJRTNwR0k3TlpKOHovTWtXeFlGYXhFN2dQWklQRGI4cXUxNzdtU1IrUjMvZTRWZzlRb09BNk10Q2hlMG9RRUQxUW9KZDg2MlVaRFpRT0ZNQWsvdTBjdjNQRjBwelVZRTJWNHBXNzRSaTBBOS9TS2swR2VoVmszRmloL2Y3ZVJSdy9MV1N3RytGenFaT1FGd3RZNGJkMXlVdUltamlBWGJrSWgxOEt6Sy9EMUs2RmEvREo0R2JzckgzYkYza2U1UmFOWUZhazYwdTdHYzhjVlR3azhxR0lLamwzUHlBbCtMTVh6akorckpiWVVBS0pRaVpaVHhBdS9HSGlDUnMxZGRvN0VPQmpEZDVpMjlRSWV4Y2lTZHdtZlhXeUtXeCtnVUxlMmVmNDFmMEUyZHdhUmVXUTg2bTNmTDQzVzR0aWhrcUc1ZW8rbWJkbkFDTjZ5eWErcVJWTUFkZjFWZXRpOUErZGVrVnp0WnBEU3poVTVxUU9MWlBlNm9aQVgvMDhFTGYrNVFpcUNjTmFBb1I5bVFCTFU3a2JMYjB5SkhhWUdxbEtJbld0YUZ0K3ViUDdyNVNNRVpKYWlCMHBJMXJKTkxoWlhCV2o5azJJeTBvVzdTWjRBcC9ZazJuaElGUTM1K1RKOXJWaHVDRWdjK3RPbmVOUkRWbXUzV3Jza1Q2Y05KcVU2QnVKUTJrT2QvZEZOTFFlOHR6Y2FiYVNyMXMxcFR6amhhNTNtT1dBQVRRV0c3amFjZWNTdXpqQTl0ci83Q2d6cWZKTEhkOW9BU2xaM2RUYThhWkZiRGhXQ1ZDcmhMamdMUXZZYU9QSi9wV1U1VE1oNGNsUnplSkl3cnBkV0NjK1UrZFh3anZ3S1ZleE1qL0t0S0M2eFUxTUllWVhzVVhEVDVPOWNESkdFWlQzQlVCei8rbXh2blFmelhPWUZVVXVPbmo5K1BkNGY3L2FBVFREYWpYZjVFRlMzQUluK2N0aHErTHZBQUMrZ0xBWTIzV01nZXJhM3BpcEMyTlh2dG1YQnBlczFyWjFReko1VnY3czlIU0Uxc1pJdCt2eVdmelZZRDdhTjQvVkxzcytvU1MyQTFHSmRzeXpZREd0Qms3R1FHR0Z2ZXJzUDltelpvYW1BdWxsSjBXOGxQc1lyc3pQTG9UQ1FhZUhqcDJwNFdYRDVrMmNUVnZHTnpiUkFNcnNiM2ZiazA3dCtVT25rVDVuVkIrNXRnalVDRnR5YnJXRjY0OEt2VDg5NGlsYWJLczJSVDU5dDUyclZpNVhpOE4vdm9OdDNEWlJwQm16ZmFmcnYwa2tOVGFRalM2ZmpmNU9kanJDYkpMTXhlV0N3VUtwSGkrbDdUTEhNdEs0Sng4RGxIVk9EMkx6UmlKMWlQaW8zVHRsN0xMVHRlcm5HOXU2SmNNOUNjQ01hSWdodmdnYmR0RVQzOWJ1bEJOOVlCS1N2dUxFZ3JuR2lPSmxlMWVBT3FVRkdzSGlaVURtNXNsSzBDMmFPdHlObCt4TGFZZmZqSjBtS3VDdXJlZVc3OS9Bait2NkZHYmxnTHFrOHIyZmZxTGMzZHluakZGcUIyL1U4cUcyTFRFYiIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6Z2NwX3dpZl9jb25maWdfc3VwZXJiaSJ9
+
+configs:
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.subscription.audit.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.subscription.resources"
+      environmentConfig:
+        env: preprod
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-subscription/server/remove-this-file-to-bbr
+    config.json: |
+      {
+      }

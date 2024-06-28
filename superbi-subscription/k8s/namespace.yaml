@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fdp-superbi-subscription
+  namespace: fdp-superbi-subscription
+

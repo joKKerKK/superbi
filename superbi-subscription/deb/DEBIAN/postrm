@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+PAC=__PACKAGE__
+FK_USER=__PACKAGE__
+CMD="$1"
+BASE_DIR=__BASE_DIR__
+
+if [ "$CMD" == "purge" ]; then
+
+	rm -rf /etc/cron.d/$PAC* || true
+	rm -rf /var/log/flipkart/$PAC
+        rm -f /etc/init.d/$PAC* || true
+        rm -rf /usr/share/$PAC || true
+        rm -rf /etc/$PAC || true
+
+	[ "$BASE_DIR" ] && rm -rf $BASE_DIR
+
+        ([ "$FK_USER" != "root" ] && uid "$FK_USER" >/dev/null 2>&1 && deluser $FK_USER) || true
+
+fi

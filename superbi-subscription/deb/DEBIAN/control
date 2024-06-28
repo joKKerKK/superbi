@@ -1,0 +1,8 @@
+Package: __PACKAGE__
+Version: 1._VERSION_
+Depends: fk-ops-servicebuilder,fk-config-service-confd,cosmos-collectd,cosmos-jmx,cosmos-tail,stream-relay,fk-nagios-common,fk-nsca-wrapper,oracle-java8-jdk
+Priority: standard
+Section: flipkart/analytics
+Architecture: all
+Maintainer: fdp-ssi-dev@flipkart.com
+Description: SuperBi Subscription Service for Flipkart Data Platform
