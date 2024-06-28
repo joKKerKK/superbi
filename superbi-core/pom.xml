@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>fdp-superbi</artifactId>
+        <groupId>com.flipkart.fdp.superbi</groupId>
+        <version>0.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>superbi-core</artifactId>
+    <name>superbi-core</name>
+    <description>superbi-core</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>background-refresher-api-adaptor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>superbi-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp</groupId>
+            <artifactId>authorization-support</artifactId>
+            <version>0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.asynchttpclient</groupId>
+            <artifactId>async-http-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>superbi-db</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>audit-db</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
