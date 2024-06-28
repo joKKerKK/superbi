@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>fdp-superbi</artifactId>
+    <groupId>com.flipkart.fdp.superbi</groupId>
+    <version>0.1</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>background-refresher-service</artifactId>
+
+  <properties>
+    <reactor.version>3.4.1</reactor.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>background-refresher-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>background-refresher-dao</artifactId>
+    </dependency>
+<!--    TODO delete background-refresher-api-adaptor -->
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>background-refresher-api-adaptor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>cosmos-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>superbi-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>cosmos</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-circuitbreaker</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-bulkhead</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+      <version>${reactor.version}</version>
+    </dependency>
+  </dependencies>
+</project>
