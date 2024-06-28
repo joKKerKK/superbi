@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
+
+
+  <persistence-unit name="audit" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <class>com.flipkart.fdp.audit.entities.ScheduleInfoAudit</class>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+    <properties>
+      <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/audit_loca"/>
+      <property name="javax.persistence.jdbc.user" value="root"/>
+      <property name="javax.persistence.jdbc.password" value=""/>
+
+      <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+      <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+      <property name="hibernate.connection.autocommit" value="true"/>
+      <property name="hibernate.show_sql" value="true"/>
+      <property name="hibernate.id.new_generator_mappings" value="false"/>
+      <property name="hibernate.current_session_context_class" value="org.hibernate.context.internal.ThreadLocalSessionContext"/>
+
+      <property name="hibernate.connection.provider_class"
+        value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"/> <!-- hibernate 4.1.9 -->
+      <property name="hibernate.c3p0.acquireIncrement" value="3"/>
+      <property name="hibernate.c3p0.maxIdleTime" value="3600"/>
+      <property name="hibernate.c3p0.minPoolSize" value="1"/>
+      <property name="hibernate.c3p0.maxPoolSize" value="6"/>
+      <property name="hibernate.c3p0.maxStatements" value="20"/>
+      <property name="hibernate.c3p0.idleConnectionTestPeriod" value="1800"/> <!-- seconds -->
+      <property name="hibernate.c3p0.maxConnectionAge" value="1000"/>
+      <property name="hibernate.c3p0.maxIdleTimeExcessConnections" value="300"/>
+    </properties>
+  </persistence-unit>
+
+  <persistence-unit name="hydra" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+    <class>com.flipkart.fdp.superbi.entities.SubscriptionEvent</class>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+    <properties>
+      <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://10.34.219.222:3306/hydra_new"/>
+      <property name="javax.persistence.jdbc.user" value="fk_admin"/>
+      <property name="javax.persistence.jdbc.password" value="mn42DXe3d"/>
+
+      <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+      <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+      <property name="hibernate.connection.autocommit" value="true"/>
+      <property name="hibernate.show_sql" value="true"/>
+      <property name="hibernate.id.new_generator_mappings" value="false"/>
+      <property name="hibernate.current_session_context_class" value="org.hibernate.context.internal.ThreadLocalSessionContext"/>
+
+      <property name="hibernate.connection.provider_class"
+        value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"/> <!-- hibernate 4.1.9 -->
+      <property name="hibernate.c3p0.acquireIncrement" value="3"/>
+      <property name="hibernate.c3p0.maxIdleTime" value="3600"/>
+      <property name="hibernate.c3p0.minPoolSize" value="1"/>
+      <property name="hibernate.c3p0.maxPoolSize" value="6"/>
+      <property name="hibernate.c3p0.maxStatements" value="20"/>
+      <property name="hibernate.c3p0.idleConnectionTestPeriod" value="1800"/> <!-- seconds -->
+      <property name="hibernate.c3p0.maxConnectionAge" value="1000"/>
+      <property name="hibernate.c3p0.maxIdleTimeExcessConnections" value="300"/>
+    </properties>
+  </persistence-unit>
+
+</persistence>

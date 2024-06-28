@@ -1,0 +1,163 @@
+replicaCount: 1
+
+image:
+  fdp-superbi-subscription:
+    registry: localhost:5000
+    pullPolicy: Always
+
+  cfgsvc-dns-proxy:
+    registry: 10.24.9.10:80
+    repository: hosts-populator/cfgsvc-dns-proxy
+    pullPolicy: IfNotPresent
+
+
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+
+podVolumes:
+  - name: mtl-config
+    configMap:
+      name: mtl-config
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: hosts-populator-keys
+    configMap:
+      name: hosts-populator-keys
+  - name: local-kind-config
+    configMap:
+      name: local-kind-config
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "10Mi"
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-subscription/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-subscription/server.yaml
+    name: app-config
+    subPath: server.yaml
+  - mountPath: /etc/default/megh/instance_metadata.json
+    name: local-kind-config
+    subPath: instance_metadata.json
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts:
+    - host: host.docker.internal
+      paths:
+        - path: /superbi(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu:
+    memory:
+  requests:
+    cpu:
+    memory:
+
+env:
+  - name: MEMORY_OPTS
+    value:
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: stage-fdp-hydra
+
+configs:
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.subscription.audit.AuditFileLogger:
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+          com.flipkart.fdp.superbi.core.adaptor.DSQueryUtil:
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/server/serialization-error.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/server/serialization-error-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-subscription/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-subscription/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.subscription.resources"
+
+      environmentConfig:
+        env: prod
+
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-subscription/server/remove-this-file-to-bbr
+
+  local-kind-config:
+    instance_metadata.json: |
+      {
+          "id": "local",
+          "app": "stage-fdp-superbi",
+          "instance_type": "i1.xlarge",
+          "hostname": "kind-local",
+          "machine_type": "vm",
+          "zone": "in-chennai-1",
+          "vpc_subnet_name": "Fk-Prod-CH",
+          "vpc_name": "Fk-Prod"
+      }
+
+

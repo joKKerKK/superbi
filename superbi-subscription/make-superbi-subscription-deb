@@ -1,0 +1,62 @@
+#!/bin/bash
+set -e
+set -x
+echo "Make started - `hostname`"
+
+pwd
+
+export PACKAGE="fdp-superbi-subscription"
+export INSTALL_BASE=./superbi-subscription
+export BUILD_DIR=${INSTALL_BASE}/build
+
+echo "Removing older deb file folder ..."
+rm -rf ${BUILD_DIR}
+rm -rf ${INSTALL_BASE}/${PACKAGE}_$VERSION.deb
+
+echo "Calling make Debian script target: $INSTALL_BASE"
+ls -al
+
+source ${INSTALL_BASE}/deb/usr/share/${PACKAGE}/server/scripts/commons.sh
+
+function die()
+{
+	echo "Error: $1" >&2
+	exit 1
+}
+
+[ -z "$INSTALL_BASE" ] && die "No base dir specified"
+[ -z "$TARGET_JAR" ] && die "No package target specified"
+[ -z "$PACKAGE" ] && die "No package name specified"
+[ ! -d "$LOCAL_DIR" ] && die "$LOCAL_DIR does not exist"
+
+OLD_DIR=`pwd`
+
+echo "Building debian for ${PACKAGE} in directory ${BUILD_DIR} from ${INSTALL_BASE}/deb/ "
+cp -r ${INSTALL_BASE}/deb/ ${BUILD_DIR}
+
+#for JPATH in /usr/lib/jvm/jdk-8-oracle-x64; do
+#    [ -x "$JPATH/bin/java" ] && JAVA_HOME=$JPATH && break
+#done
+
+#export JAVA_HOME
+
+cp -r ${INSTALL_BASE}/target/superbi-subscription.jar ${BUILD_DIR}/${TARGET_JAR}
+
+cd "$BUILD_DIR"
+ls -l
+
+find . -type f -exec sed -i "s/__PACKAGE__/${PACKAGE}/g; s#__BASE_DIR__#${BASE_DIR}#g" {} +
+find . -type f -exec sed -i "s/_VERSION_/${VERSION}/g" {} +
+
+cd $OLD_DIR
+
+echo "Building Debian now.."
+dpkg-deb -b "${BUILD_DIR}"
+
+echo "Debian building was tried"
+rm -rf ${BUILD_DIR} || true
+
+echo "Renaming debian to ${DEB_PATH}"
+
+mv "${INSTALL_BASE}/build.deb" ${DEB_PATH}
+####
