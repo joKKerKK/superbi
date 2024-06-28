@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>fdp-superbi</artifactId>
+        <groupId>com.flipkart.fdp.superbi</groupId>
+        <version>0.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cosmos-client</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>cosmos</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>superbi-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>background-refresher-dao</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp.superbi</groupId>
+            <artifactId>superbi-dsl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vertical-blank</groupId>
+            <artifactId>sql-formatter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.fdp</groupId>
+            <artifactId>cosmos-core</artifactId>
+            <version>2.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.swagger</groupId>
+                    <artifactId>swagger-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive.hcatalog</groupId>
+                    <artifactId>hive-hcatalog-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+</project>
