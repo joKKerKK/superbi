@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>fdp-superbi</artifactId>
+    <groupId>com.flipkart.fdp.superbi</groupId>
+    <version>0.1</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>brv2-api-impl</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>background-refresher-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>background-refresher-dao</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.superbi</groupId>
+      <artifactId>superbi-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.compito</groupId>
+      <artifactId>compito-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.compito</groupId>
+      <artifactId>compito-kafka</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.flipkart.fdp.compito</groupId>
+      <artifactId>compito-pubsub-lite</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+    </dependency>
+  </dependencies>
+</project>
