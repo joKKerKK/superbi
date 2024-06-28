@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+  {{- with .Values.serviceAnnotations }}
+  annotations:
+    {{- if and (eq $.Values.service.type "LoadBalancer") (not (index . "elb.fcp/name")) }}
+    elb.fcp/name: {{ include "elb.generated/name" $ }}
+    {{- end }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetport }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,161 @@
+# Default values for service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+serviceAccount:
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "stage-fdp-superbi-web-ci"
+
+serviceAnnotations:
+  fcp/app-id: stage-fdp-superbi
+  elb.fcp/name: stage-fdp-superbi
+  elb.fcp/backend-service: stage-fdp-superbi
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms14g -Xmx14g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: stage-fdp-hydra
+  - name: APP_CONFIGMAP
+    value: app-config
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: APP_CONFIGMAP_SUB_PATH
+    value: config.json
+  - name: ENV
+    value: stage
+
+resources:
+  limits:
+    cpu: 3
+    memory: 15Gi
+  requests:
+    cpu: 3
+    memory: 15Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 65
+  # targetMemoryUtilizationPercentage: 80
+
+configs:
+  mtl-config:
+    cosmos-jmx.json: |
+      {
+          "servers": [
+            {
+              "port": "21214",
+              "host": "localhost",
+              "process": "service",
+              "customTags": "env=stage",
+              "queries": [
+                {
+                  "obj": "*",
+                  "saperator": "."
+                }
+              ],
+              "numQueryThreads": 2
+            }
+          ]
+        }
+    cosmos-tail.yml: |
+      application: "stage"
+      file: "/var/log/access-logs/access.log"
+      requestLinePosition: 5
+      statusCodePosition: 6
+      sizePosition: 7
+      responseTimePosition: 10
+      multiplier: 1
+      role: "app"
+      ignoreUrls: /health,/ping
+
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.web.exception.SuperBiExceptionMapper: "INFO"
+          com.flipkart.fdp.superbi.web.logger.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-web/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+          com.flipkart.fdp.superbi.core.adaptor.DSQueryUtil:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-web/server/serialization-error.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/server/serialization-error-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %replace(%msg %ex){'\n', '\u2028'} %nopex %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-web/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.web.resources"
+
+      environmentConfig:
+        env: stage
+
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-web/server/remove-this-file-to-bbr
+
+    config.json: |
+      {
+      }

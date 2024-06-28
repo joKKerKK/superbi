@@ -1,0 +1,1267 @@
+
+replicaCount: 2
+
+serviceAccount:
+  name: "fdp-superbi-web-preprod-ci"
+
+serviceFullname: superbi
+
+podVolumes:
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "3Gi"
+  - name: mtl-config
+    configMap:
+      name: mtl-config
+  - name: cosmos-tail-access-logs
+    emptyDir: { }
+  - name: google-cloud-key
+    secret:
+      secretName: wif-config
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-web/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-web/server.yaml
+    name: app-config
+    subPath: server.yaml
+  - mountPath: /var/log/access-logs
+    name: cosmos-tail-access-logs
+  - mountPath: /var/secrets/google
+    name: google-cloud-key
+
+serviceAnnotations:
+  fcp/app-id: stage-fdp-superbi
+  elb.fcp/name: superbi.fdp-superbi-web-preprod.fkcloud.in
+  elb.fcp/backend-service: superbi.fdp-superbi-web-preprod.fkcloud.in
+  elb.fcp/frontend-port: "80"
+  elb.fcp/backend-port: "21212"
+  elb.fcp/health-check-port: "21212"
+  elb.fcp/health-check-path: /health
+  elb.fcp/health-check-timeout: 1s
+  elb.fcp/health-check-interval: 5s
+  elb.fcp/load-balancing-algorithm: "leastconn"
+  elb.fcp/do-not-delete-vip: "true"
+
+resources:
+  limits:
+    cpu: 3
+    memory: 12Gi
+  requests:
+    cpu: 3
+    memory: 12Gi
+
+env:
+  - name: Config_only
+    value: TR12
+  - name: MEMORY_OPTS
+    value: -Xms14g -Xmx14g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: kaas
+  - name: CONFIG_BUCKET
+    value: stage-fdp-hydra-gcp
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /var/secrets/google/wif-config.json
+  - name: APP_CONFIGMAP
+    value: app-config
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: APP_CONFIGMAP_SUB_PATH
+    value: config.json
+  - name: ENV
+    value: stage
+  - name: POWERBIAUTH_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: powerbiauth
+        key: client_id
+  - name: POWERBIAUTH_CLIENT_NAME
+    valueFrom:
+      secretKeyRef:
+        name: powerbiauth
+        key: client_name
+  - name: POWERBIAUTH_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: powerbiauth
+        key: client_secret
+  - name: MAILSERVER_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: mail-server
+        key: username
+  - name: MAILSERVER_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: mail-server
+        key: password
+  - name: SUPERBI_DATASOURCE_HDFS_DEFAULT_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: hdfs_default_password
+  - name: SUPERBI_DATASOURCE_HDFS_DEFAULT_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: hdfs_default_username
+  - name: SUPERBI_DATASOURCE_HDFS_GCP_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: hdfs_gcp_password
+  - name: SUPERBI_DATASOURCE_HDFS_GCP_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: hdfs_gcp_username
+  - name: SUPERBI_DATASOURCE_BQ_BATCH_P0_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_client_id
+  - name: SUPERBI_DATASOURCE_BQ_BATCH_P0_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_BATCH_P1_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_BATCH_DEFAULT_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_BATCH_CRITICAL_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_BATCH_HDFS_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_STORAGE_DEFAULT_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_REALTIME_P1_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_REALTIME_P0_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_REALTIME_DEFAULT_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_REALTIME_CRITICAL_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: SUPERBI_DATASOURCE_BQ_REALTIME_APPEND_ONLY_P_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-datasource
+        key: bq_p_key
+  - name: GRINGOTTS_DB_USER
+    valueFrom:
+      secretKeyRef:
+        name: gringotts
+        key: db_user
+  - name: GRINGOTTS_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: gringotts
+        key: db_password
+  - name: COSMOS_DATABASE_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-database
+        key: username
+  - name: COSMOS_DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-database
+        key: password
+  - name: COSMOS_WRITE_DATABASE_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-write
+        key: db_username
+  - name: COSMOS_WRITE_DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-write
+        key: db_password
+  - name: HYDRA_READ_DB_USER
+    valueFrom:
+      secretKeyRef:
+        name: hydra-read
+        key: db_user
+  - name: HYDRA_READ_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: hydra-read
+        key: db_password
+  - name: HYDRA_READ_DB_JNDINAME
+    valueFrom:
+      secretKeyRef:
+        name: hydra-read
+        key: jndiname
+  - name: SESSION_STORE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: session-store
+        key: name
+  - name: SESSION_STORE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: session-store
+        key: password
+  - name: BADGER_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: badger
+        key: client_id
+  - name: BADGER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: badger
+        key: client_secret
+  - name: AUTHN_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: authn
+        key: secret
+  - name: AUTHN_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: authn
+        key: client_id
+  - name: SCHEDULER_CONFIG_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-config
+        key: password
+  - name: SCHEDULER_CONFIG_USER
+    valueFrom:
+      secretKeyRef:
+        name: scheduler-config
+        key: user
+  - name: QUERY_RESULTS_NAME
+    valueFrom:
+      secretKeyRef:
+        name: query-results
+        key: name
+  - name: QUERY_RESULTS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: query-results
+        key: password
+  - name: AUTH_CACHE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: auth-cache
+        key: name
+  - name: AUTH_CACHE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: auth-cache
+        key: password
+  - name: D42_ACCESSKEY
+    valueFrom:
+      secretKeyRef:
+        name: d42
+        key: access_key
+  - name: D42_SECRETKEY
+    valueFrom:
+      secretKeyRef:
+        name: d42
+        key: secret_key
+  - name: LOCK_STORE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: lock-store
+        key: name
+  - name: LOCK_STORE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: lock-store
+        key: password
+  - name: AUDIT_DB_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: audit-database
+        key: username
+  - name: AUDIT_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: audit-database
+        key: password
+  - name: QUERY_META_NAME
+    valueFrom:
+      secretKeyRef:
+        name: query-meta
+        key: name
+  - name: QUERY_META_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: query-meta
+        key: password
+  - name: DEFAULT_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: default
+        key: username
+  - name: HYDRA_SCHEDULES_DB_USER
+    valueFrom:
+      secretKeyRef:
+        name: hydra-schedules
+        key: db_user
+  - name: HYDRA_SCHEDULES_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: hydra-schedules
+        key: db_password
+  - name: COSMOS_SOURCE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-source
+        key: name
+  - name: COSMOS_READ_DB_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-read
+        key: db_username
+  - name: COSMOS_READ_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: cosmos-read
+        key: db_password
+  - name: QUARTZ_DATASOURCE_USER
+    valueFrom:
+      secretKeyRef:
+        name: quartz-data-source
+        key: user
+  - name: QUARTZ_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: quartz-data-source
+        key: password
+  - name: HYDRA_DB_USER
+    valueFrom:
+      secretKeyRef:
+        name: hydra
+        key: db_user
+  - name: HYDRA_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: hydra
+        key: db_password
+  - name: HYDRA_DB_JNDINAME
+    valueFrom:
+      secretKeyRef:
+        name: hydra
+        key: db_jndiname
+  - name: APPLICATION_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: application
+        key: secret
+  - name: DATA_STORE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: data-store
+        key: name
+  - name: DATA_STORE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: data-store
+        key: password
+  - name: PROXYSERVER_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: proxy-server
+        key: client_id
+  - name: PROXYSERVER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: proxy-server
+        key: client_secret
+  - name: SUPERBI_DEFAULT_EMAIL_CLIENT_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: superbi-default
+        key: email_client_username
+  - name: SUPERBI_DEFAULT_EMAIL_CLIENT_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: superbi-default
+        key: email_client_password
+  - name: SUPERBI_APIKEYS_FDPGUI_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdgui_client_secret
+  - name: SUPERBI_APIKEYS_FDPSSI_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdpssi_client_secret
+  - name: SUPERBI_APIKEYS_SUSCRIPTION_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: subscription_client_secret
+  - name: SUPERBI_APIKEYS_DOWNLOAD_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: download_client_secret
+  - name: SUPERBI_APIKEYS_NFR_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: nfr_client_client_secret
+  - name: SUPERBI_APIKEYS_FDPGUI_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdgui_client_id
+  - name: SUPERBI_APIKEYS_FDPSSI_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdpssi_client_id
+  - name: SUPERBI_APIKEYS_SUSCRIPTION_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: subscription_client_id
+  - name: SUPERBI_APIKEYS_DOWNLOAD_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: download_client_id
+  - name: SUPERBI_APIKEYS_NFR_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: nfr_client_client_id
+  - name: SUPERBI_APIKEYS_FDPINGESTION_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdp_ingestion_client_secret
+  - name: SUPERBI_APIKEYS_FDPINGESTION_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdp_ingestion_client_id
+  - name: SUPERBI_APIKEYS_FDPDE_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdp_de_client_secret
+  - name: SUPERBI_APIKEYS_FDPDE_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: fdp_de_client_id
+  - name: SUPERBI_APIKEYS_DEFAULT_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: default_client_secret
+  - name: SUPERBI_APIKEYS_DEFAULT_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-apikeys
+        key: default_client_id
+  - name: SUPERBI_GRINGOTTS_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-gringotts
+        key: client_secret
+  - name: SUPERBI_GRINGOTTS_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-gringotts
+        key: client_id
+  - name: SUPERBI_SUBSCRIPTION_DATACLIENT_DOWNLOAD_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-subscription-dataclient
+        key: download_client_secret
+  - name: SUPERBI_SUBSCRIPTION_DATACLIENT_DOWNLOAD_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-subscription-dataclient
+        key: download_client_id
+  - name: SUPERBI_SUBSCRIPTION_DATACLIENT_SUBSCRIPTION_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-subscription-dataclient
+        key: subscription_client_secret
+  - name: SUPERBI_SUBSCRIPTION_DATACLIENT_SUBSCRIPTION_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-subscription-dataclient
+        key: subscription_client_id
+  - name: SUPERBI_QAASCLIENT_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: superbi-qaasclient
+        key: client_secret
+  - name: SUPERBI_QAASCLIENT_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: superbi-qaasclient
+        key: client_id
+  - name: TARGET_DEFAULT_USER
+    valueFrom:
+      secretKeyRef:
+        name: target-default
+        key: user
+  - name: TARGET_DEFAULT_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: target-default
+        key: password
+  - name: QAAS_DOWNLOADER_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: qaas-downloader
+        key: client_id
+  - name: QAAS_DOWNLOADER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: qaas-downloader
+        key: client_secret
+  - name: QAAS_DOWNLOADER_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: qaas-downloader
+        key: username
+  - name: SUPERBI_D42_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-d42
+        key: access_key
+  - name: SUPERBI_D42_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: superbi-d42
+        key: secret_key
+  - name: QUARTZ_DATASOURCE_SUPERBI_USER
+    valueFrom:
+      secretKeyRef:
+        name: quartz-datasource-superbi
+        key: user
+  - name: QUARTZ_DATASOURCE_SUPERBI_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: quartz-datasource-superbi
+        key: password
+  - name: AUDIT_JDBC_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: audit-database
+        key: username
+  - name: AUDIT_JDBC_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: audit-database
+        key: password
+  - name: BIGTABLE_CONFIG
+    valueFrom:
+      secretKeyRef:
+        name: bigtable
+        key: config
+  - name: RANGER_USER_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: ranger
+        key: user_password
+  - name: RANGER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: ranger
+        key: client_secret
+  - name: JASPER_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: jasper
+        key: username
+  - name: JASPER_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: jasper
+        key: password
+  - name: SAIKU_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: saiku
+        key: username
+  - name: SAIKU_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: saiku
+        key: password
+  - name: JIRA_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: jira
+        key: username
+  - name: JIRA_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: jira
+        key: password
+  - name: QUERY_CACHE_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: query-cache
+        key: username
+  - name: QUERY_CACHE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: query-cache
+        key: password
+  - name: FIREBALL_CONSUMER_LAG_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: fireball-consumer-lag
+        key: username
+  - name: FIREBALL_CONSUMER_LAG_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: fireball-consumer-lag
+        key: password
+  - name: FIREBALL_METRICS_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: fireball-metrics
+        key: username
+  - name: FIREBALL_METRICS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: fireball-metrics
+        key: password
+
+secrets:
+  wif-config:
+    wif-config.json: eyJkYXRhIjoidmF1bHQ6djE6MjFlRFBlM283VjJoR3FGM0Yxa1JUL2JkYk9zSGZvZVBEamlHbUxGWUxJK0JESXR6UGhkQzhJVlBlNWlJODZKNm1JaVl4SVUyU3VZRUU0d1hRWGZWT0dEcEhUYWtwRC9sL0RNbWxDMTJqSW1jOXlzNUNDS2NDQ2k4OXNHR0crenZab0M2QzB6d3VkTVhDTXdmSHJKNE12Z3pNd2NXY3I4RHNlRm5ra2ZJaUdBVVF5anVlTVl2cm94SjdnNzQvaU5MU01DeDBMSzVkZkZwQ2FKTFA2czV2dnBpNHZFM1ZVSGxjRG5jRzh5djJ0RkEyOWtuVktqVzdmTUJuaXp0WmdzMDRuQlJkK0ZXWi9VcjZwYXN6ZHNpOUZvdms1OVY2U2w2RTRZQTFodlZMejhJRFhDWVBZNU8zSVpyTkVzdkpUc29RY1B0OVBPcUVZcjA3NjVkVlcrL2ZKeUpBQy90THh2SlNLREVxV3J5b1loK3JhTHBYZlpxQ3RaUWpCOTlnUVhCWEVlOE1mYTNLT3QzeGVXNGtYRFgxaVVrYVhHaVB5aVNibmppdHJWTFgwenExZGRjM3RicUJYNTJxWFk1OGdLRUVlRU1UZDNweGthaG8wL2dQcjRBMzFQZEorSnprOUdnd3JueWE3VTRFcmt2T2M3aHVhRE9GRVBiUnZmZHkrNVpWamF0RzJrVnhPcGxDWUNVckFlaGYySkJPa2JCdlk0cG80TkN6Z1BQc3hCZml0ZUhTY0pPSW4rTU90MjB6SXBIaEVrWkFmZXJvQkdzZVpDTWN2b2RHYXJHZm5BY2tzSzJhUERsUGNPdHpyUEtPQ3RqQi80VGJVT25yY2tQNVpHVzlvWlhkeCt1V0NUK3lpQktxTUJGVDQ0TnM2TDYrdXZUMGxGR0ZHU1A0ZjNwaW43a3lLRmRBVzRvSUFFdVYzeTloMlF0Tm9DZll6YVplbmdGeHJkREJlL1JVNHlscURPSHlHY21NaXdJTUZIL1FEYjlJNCtWaXBDV1QyeVpVVDhKMDhObXE3dmE3YjZGOFQ5V0NqYUY4WndlZ0ZhaFhRMUhxVEFnNEhDQWZ2cE5LZ3JBTUdzcTFyZ2sza3IrS3kzR1BlUWtLY2J3angwZW93b1N3OEI2UmtLQ0ZSL0pZVFJ5TGU5MmhyMXRqYlc0Mkh2ZXB4N1Bma0FjdjBBTlJCOUxJSWxNNEVHQ2tLNWs5azlRd0xtalVyQXltVXlEZUhYUDFZempzaUsxbGVlZWk3RTNTS0pKclRWYk9xamxhVmNNTTNUb1p5cjhsd2pRZXJJQ3QxUlVoMFppS3FkTkJYVXpLYnV4cjlkUTVLQmNlQjZEcmdwYjFwU0lSamRSL3ZoZEhIU2hzbnNZV0FxdmdLMk1Mdmhid3J6MjU2dGdzVHNDQmNyS3RaQWlmNmt1N1FoMVladFNrekc4VzNIcVIrNG1qU25JVC8waXBlN2gxSllLajNZZkFpNmE5YjVYQmMrZWVFOVVUK0pZN3VJSzZ6eHQ1aFFYQ3BHTjFuTllKYkRxWGxoQnZvdFprbWFFMUlRdWJ5L29BWFNEZktSV3BLZERNalhTWHIxZXNBbElUczUySmN6UjM0MGt6d3FMUTVHNXV1eGFkME9rclBXMiIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  powerbiauth:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6ZzdrcDVUai9EU1oyRWtOczQvRUFPTUMxSzZWTXN1eTJHT1JYaEZSdnVvblhyZVpqSzU2TW5wVGhPWlppZkdSWHlRVFQ4aWNEaGxaVXZZNjFWaXF2Vmc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    client_name: eyJkYXRhIjoidmF1bHQ6djE6WDhJZEpRZnh4YnZWbFBlcDRYUTlZb2pvbUJNY2M5OEd0Qi9ubDZKblF4bUsyRU00SlpaLyIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6djVQbXBaTnZEU2wrUXRZaW1sZnFuMGZDOWx5QUpOLzZGdFdlV2IrUWZKdVo1cEFqdHBwMWhFT1YzclNXQ1BZQXVCcTA3S1pibDE4dmw4aE0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  mail-server:
+    username: eyJkYXRhIjoidmF1bHQ6djE6bzJGQjNWdUsxOG1VVForc1p5VEZkbEkyenJRTVppNjhvQVk4RU5Rck1wckZYYWNFUlR0RU5ZMD0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    password: eyJkYXRhIjoidmF1bHQ6djE6WjZVUTdZS1d3d3VtVWhFbFlUS2E5YXBTOXRCaGFLN1hNV21yY2laYkk5TWIzZ3lqIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+  superbi-datasource:
+    hdfs_default_password: eyJkYXRhIjoidmF1bHQ6djE6cG5zdHRDK1MzZUdpVE5ONEJZUHErd29lbzAyMUszdG0vNHhYY1BNQiIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    hdfs_default_username: eyJkYXRhIjoidmF1bHQ6djE6OXJkK3V2c0IreU1iRmFnUkp1S0d2Tzc5Z0VUMU9Gb1M2bEVnOHFvS0Z1Y3dSd0NIK1IydzVRPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    hdfs_gcp_username: eyJkYXRhIjoidmF1bHQ6djE6SnlHTVNzNkxpcXFKZGVmVTZVVGpKVVo5UFlneUkzTnVYblFaN2Jwcm1IVU1KaGdBSnZhd3VRPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    hdfs_gcp_password: eyJkYXRhIjoidmF1bHQ6djE6WlBRQTRzNGY1TFpYdGRBRWVZSzlwYTNtalJDZDFTbHg3L0ZIaU42KyIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    bq_client_id: eyJkYXRhIjoidmF1bHQ6djE6ZHBYek9zWGdkQjhUbzloeEtJdm9Sd1NFOU9zWnBKa1poSlhlTTUvVUJlek1UckFUIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    bq_p_key: eyJkYXRhIjoidmF1bHQ6djE6WkdFbDU3V3hNUFVCWllYUTBBWCtmYnZLMlFzKzNpTlc2UU1hMkdjTFgwUT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    bq_p_key_id: eyJkYXRhIjoidmF1bHQ6djE6WkdFbDU3V3hNUFVCWllYUTBBWCtmYnZLMlFzKzNpTlc2UU1hMkdjTFgwUT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  gringotts:
+    db_user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  cosmos-database:
+    username: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  hydra-read:
+    db_user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    jndiname: eyJkYXRhIjoidmF1bHQ6djE6MURGK0ZLbnVmeXNXTlh1eG9OZHNLYUVWNVY3WTFjb0ZQTk9vVk5nVHdTRzZkV1k5SVlRaHU1TT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  cosmos-write:
+    db_username: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  session-store:
+    name: eyJkYXRhIjoidmF1bHQ6djE6VHdYbTJ0NzVweGFBVW5nMU5YaHN5QkIxQmdLTE5HWXhSRU1XS1VSZCtzZ2JzOWc9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    password: eyJkYXRhIjoidmF1bHQ6djE6VHdYbTJ0NzVweGFBVW5nMU5YaHN5QkIxQmdLTE5HWXhSRU1XS1VSZCtzZ2JzOWc9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+  badger:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6SlU1ZnZCZElCNGo1bER4WVhKZ2xpNjZlR1NWRmFzajhWa1kwajJVeVkrRkoiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6ZWN0RHRkbDhsc2RwcjNHVWUzQzNxMy9GR0xCSC83L0tkdDROT2R3N2ZJTEtkMGxybmxMSnpvU1I2VEdWaVBPcEx1NzBodXJJVjJrcGExeFgiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  authn:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6WTF2K0oyRXoyVENtQ1lNK0hUNW5Hb1U1NDN1K1AxeG92eGhnVnA2RExZTmNmSk1ObHNXQ3VKWUFJbWNocDc1eHB2dHdRbXM9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    secret: eyJkYXRhIjoidmF1bHQ6djE6TVNPNTFuMmVlU0lISXd4NWpMYzZOYkQ5M2ViQjF2ZEw2MkEvTUZzZVhDQ0hvcHlWdTM5RHRqdjRtYkw4STE2ckJBNjVlMmRnMmREMmRRK1Y0R1BPd0c5bkFzdXBGTnJlIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+  scheduler-config:
+    password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  query-results:
+    name: eyJkYXRhIjoidmF1bHQ6djE6eS9YeGFFVzM1c2U2enpvcXZ5R1hxOEZjT3FTNG5UR1pJNW9MSVdZWFZzMkhRV1ZtT1NKN1ZCND0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    password: eyJkYXRhIjoidmF1bHQ6djE6eS9YeGFFVzM1c2U2enpvcXZ5R1hxOEZjT3FTNG5UR1pJNW9MSVdZWFZzMkhRV1ZtT1NKN1ZCND0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  auth-cache:
+    name: eyJkYXRhIjoidmF1bHQ6djE6NkxpdFJOUVF6NGNBS2tGdlR5bXJmeUxzWUxmQURmVFlONWFHMms5UmpuamJMby9JZUN3PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6NkxpdFJOUVF6NGNBS2tGdlR5bXJmeUxzWUxmQURmVFlONWFHMms5UmpuamJMby9JZUN3PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  d42:
+    access_key: eyJkYXRhIjoidmF1bHQ6djE6V3hKME01amIyb1lQdWsyYnB4REZFcS9Pbjg1UUZmSUNNYXNhL3ovVTZOVlhGNzZjb2VWaGEyTm1INEhkeEluOXVvRURjTG04bmRxdERtZzVUT2tmM3ZZZmR5K1pPYmlYTGNxMllWVlBnam9KMXM0LzJPMVNYdzQ9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    secret_key: eyJkYXRhIjoidmF1bHQ6djE6K0NqcFdkT0NxdFhGM0U5TlJxMjBCYjBHTm1LcWdySGVtVnBYRTZqUlArM2NVRzZzK1FqeGlabWxQU0UxNk8vUm5UemRiZE00NTlFT0VUdXBoTElPWUY3STBXOD0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  lock-store:
+    name: eyJkYXRhIjoidmF1bHQ6djE6eS9YeGFFVzM1c2U2enpvcXZ5R1hxOEZjT3FTNG5UR1pJNW9MSVdZWFZzMkhRV1ZtT1NKN1ZCND0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    password: eyJkYXRhIjoidmF1bHQ6djE6eS9YeGFFVzM1c2U2enpvcXZ5R1hxOEZjT3FTNG5UR1pJNW9MSVdZWFZzMkhRV1ZtT1NKN1ZCND0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  audit-database:
+    username: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  query-meta:
+    name: eyJkYXRhIjoidmF1bHQ6djE6MGUxOWMyQ0dVRDFXQmFwOCtxUXhxUDdhNFk1ZERtcXdlWUFJbVY2K012VFphcTZoeGRZPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6MGUxOWMyQ0dVRDFXQmFwOCtxUXhxUDdhNFk1ZERtcXdlWUFJbVY2K012VFphcTZoeGRZPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  default:
+    username: eyJkYXRhIjoidmF1bHQ6djE6c2pISzkxN2FMZWZvRVlWYUR5dmFSZld6NGNmNENGM0ZBR05HV0VJbGhkb00iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  hydra-schedules:
+    db_user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  cosmos-source:
+    name: eyJkYXRhIjoidmF1bHQ6djE6THNHZWk2d0U0cmFQS283eVoyT3JGUmd3NExFdGZkclplclZYUWhJNlAxbE9kbzh4WFZzPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  cosmos-read:
+    db_username: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  quartz-data-source:
+    user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  hydra:
+    db_user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    db_jndiname: eyJkYXRhIjoidmF1bHQ6djE6VUN4T1NmVFZVUjJCZDFRekpzNXNwaTluSitBKytpc0NEOGQ2eERIWEVFdkNJaDQ5b1E9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  application:
+    secret: eyJkYXRhIjoidmF1bHQ6djE6eDM0TGhmSlQ2TEpCd1ZrYk54N0JCTDFEMHdPZGFMNVpDdXNpdytrNjNpQVdRbUxwb3pSajlhK3FsWWxiRVpKTUZkU0hEMHRwM1loYTFmU2o4UVFRYmFXYWdOY3UzVGUwalBQb0loTDFQaGZNREY0dlMxeG95c2ZpQ2NNPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  data-store:
+    name: eyJkYXRhIjoidmF1bHQ6djE6SHZjUWFEbU90WDBIUmZPVUtsK203dVVsSSs2Ky9aZllyeGs4MlUzUG4vST0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    password: eyJkYXRhIjoidmF1bHQ6djE6SHZjUWFEbU90WDBIUmZPVUtsK203dVVsSSs2Ky9aZllyeGs4MlUzUG4vST0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  proxy-server:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6VlZuSnUwdDlCMXY2dU1qU2FMSUYxbFJIMDRSTzBuMFkvR0JraEZ6eDlxT2IiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6MXVBRDU0SzVZdVNVbTNnRlRlWDRHUnljWG5kekxzN3hpUFQrdjNRclFzenl1ckdrRTdoUlNHQXhIS1ZSc1hoWVNGY205bjZLQjlRWXFoSW85b0laZ2c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  target-default:
+    user: eyJkYXRhIjoidmF1bHQ6djE6NTRSU2x0OEpXYllabzdEd2FzbHFzOG5zN2IxUkdxazNDSzQ0UWkrK0lHUmpTNG9vU2grUSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6aVYySFpmU21hUmRYTmRFQ2hjVzQ1NzVGMWxYRzNNSWlMMVJIZmIvd2l0S0RHcUtLb0E9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  superbi-apikeys:
+    default_client_id: eyJkYXRhIjoidmF1bHQ6djE6ZHBYek9zWGdkQjhUbzloeEtJdm9Sd1NFOU9zWnBKa1poSlhlTTUvVUJlek1UckFUIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    default_client_secret: eyJkYXRhIjoidmF1bHQ6djE6aC93TXRwNGlucjZhblVhMDdZaFBIenNDOUFoaXArWEdmU21UZmQvUzVRS1dkcCt3Z3lxR3hBPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    fdgui_client_id: eyJkYXRhIjoidmF1bHQ6djE6dE1DM1YwRFYvcXl4RkZzS3dsejEwU0c4c3FFOTZTL3pLbEJDTTJwSElISDMiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    fdgui_client_secret: eyJkYXRhIjoidmF1bHQ6djE6ZVBpKzl1MTgwSlN5TFFNclZySHpzRmlaaFIwM3NUYUs5SWRiVXhaY3R5OVFBNUsxZThlQUJUZUptTGcxVGFYVktyQlVSNmgwcThFU3VoUW1Zako0MkE9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    fdpssi_client_id: eyJkYXRhIjoidmF1bHQ6djE6cUJkNUlwMDIwbVRFS0RsYUs3V2IwRHp1ZGxEb3F4eVlnd3ZpUWQ0NTg1VEhIUT09Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    fdpssi_client_secret: eyJkYXRhIjoidmF1bHQ6djE6aWx0UXBSLzdUTFY2dm5CMlhQVlVIQVlIUlBWSlYvUHFXenVVdENtdllNS2NTdGpRR2VpRE9PNVl2c096Z3lzSHRhcHdPNDAyelgzTjhYSklPYjBQeHc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    fdp_de_client_id: eyJkYXRhIjoidmF1bHQ6djE6dHZiUjRJSk1TQUhSQlZJSGl2Q1E0dnM3YmZSR29kbFZEdGFnY2V0MGwzT1RwZz09Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    fdp_de_client_secret: eyJkYXRhIjoidmF1bHQ6djE6V2wxUVdHVjJ5ZXhsdGJCSUdXNDFNUmthVldiZ08zOEw0NXVFejhRdldWSFEwam9OMmFuemtzQ1ROcW5BSHplVFp6K1I3cDFqZGxIbXNGYmdZak1GZ2c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    subscription_client_id: eyJkYXRhIjoidmF1bHQ6djE6aUl6Y1pPK292WGZlb1RJd000WnlSVWtHMWw2aDV2ZnFnTU9YUTBlOTB6NWd6djRBZGpPcjl3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    subscription_client_secret: eyJkYXRhIjoidmF1bHQ6djE6aUl6Y1pPK292WGZlb1RJd000WnlSVWtHMWw2aDV2ZnFnTU9YUTBlOTB6NWd6djRBZGpPcjl3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    download_client_id: eyJkYXRhIjoidmF1bHQ6djE6RVE0eWtpVU41cEp5WGdIWWtEajk1bHpjMjZDL1RtelcrOGRob3NTV2NXTFZlYmlVIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    download_client_secret: eyJkYXRhIjoidmF1bHQ6djE6RVE0eWtpVU41cEp5WGdIWWtEajk1bHpjMjZDL1RtelcrOGRob3NTV2NXTFZlYmlVIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    fdp_ingestion_client_id: eyJkYXRhIjoidmF1bHQ6djE6eEgzbFRZeGIxeGZoNFQrbWVUVzdxNU5pczh1Zk42anJGbCtQbjgydjkzRmZLUVMwTVFGbkF3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    fdp_ingestion_client_secret: eyJkYXRhIjoidmF1bHQ6djE6QnhOczlNNkovZWlaWHdoWjU1TVYzOGJIQzdWa2xDNlJNdUFiWHVtQVZqYmlzcTVkbkc2dGx3OXBzb0ZJajA0bFNHNi9uQjZ6Q05DUWM0dDU4VStQWXc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    nfr_client_client_id: eyJkYXRhIjoidmF1bHQ6djE6ejZsZldJTjRjVmhFeTBobjV0MUNZcVBtZFVyUmgrR1lvU3BybzQxUmt4SUZHS1kxdmZRPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    nfr_client_client_secret: eyJkYXRhIjoidmF1bHQ6djE6d0J6U05zcWlGL0tBenBGVG9maDVCOU9RaXFvb0F6dmM1b2pGVWdpcGtZbjBtNUVCcWx4Ly9oWUhRR1BEZEdSclRtUHdtTWt4cUdheWRBZ0pLVjBOUGc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  superbi-gringotts:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6dE1DM1YwRFYvcXl4RkZzS3dsejEwU0c4c3FFOTZTL3pLbEJDTTJwSElISDMiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6VGZLemZuQklNR0xyeG42d2tSWnB6bnZ4OFBTS1dXdk5KelFTdDh4SFp1RjVtdjNRUGhCZXNhMWlSZWxrazNZN1FqWHFpYVJxcFV4N1BacVloT0FJSVBadDZCST0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  superbi-subscription-dataclient:
+    download_client_secret: eyJkYXRhIjoidmF1bHQ6djE6d0lQSzRDcEdTYlRuZnpMeUpGanZRL2Q4Wmhzak5NZlZmMXU5dXFCOGJZQ1NTdUhLIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    download_client_id: eyJkYXRhIjoidmF1bHQ6djE6d0lQSzRDcEdTYlRuZnpMeUpGanZRL2Q4Wmhzak5NZlZmMXU5dXFCOGJZQ1NTdUhLIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    subscription_client_secret: eyJkYXRhIjoidmF1bHQ6djE6aUl6Y1pPK292WGZlb1RJd000WnlSVWtHMWw2aDV2ZnFnTU9YUTBlOTB6NWd6djRBZGpPcjl3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    subscription_client_id: eyJkYXRhIjoidmF1bHQ6djE6aUl6Y1pPK292WGZlb1RJd000WnlSVWtHMWw2aDV2ZnFnTU9YUTBlOTB6NWd6djRBZGpPcjl3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  superbi-qaasclient:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6Mi85YjRsQjR0ODhwZmFJaTVUakYwNTQ0d3BnS3ZiNjVqbTZsVWp3ZzFkZ3FWS3NUc1lFPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6TDViaEZBa254SEdMRVNoNmJMOVVwT0duY0dVUmJzZkcxMkd4UUFSeWJBZ1RlcERxRnRjRE1LclZYWENlbURaRW9YQitQdVVETVIzVXQ3bzBOT2VRQWc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  superbi-default:
+    email_client_username: eyJkYXRhIjoidmF1bHQ6djE6ZE5pdXpYSzRRcEF5Uyt5eFB4REpiWGNhWWxma0lHOWZLRW9aVXplKzJBOThvbGwzQUp1SzltOD0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    email_client_password: eyJkYXRhIjoidmF1bHQ6djE6Z1BSK2lWTmN6azRVbGFjMzhpOTFGV0FocTFxZzNRWGZCM2J2dlUwOFFybHNaMis4Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+  qaas-downloader:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6ZzhqY0xhd3VBNTArenR4emVSdERuMFF6V0thT2x3YjZKZTArL2g3TkRkOWsvSUo0YWIwPSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6NlFkWitQSnIwaVlITUdrcjllMFNFWmwvUkcrZVpXK2RIdWRGeHhhQWwvRGVVQ0ppMWU2eStXNmZLZnZPY3Joc0wxMEp1dTNJS2t2TENWelZlS3pMbUE9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    username: eyJkYXRhIjoidmF1bHQ6djE6REIvMyt3M1hPUlhYbmViQWVHd0ZRZGFMSGFpSWZkZlR4YWtGK2lkcyIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  superbi-d42:
+    access_key: eyJkYXRhIjoidmF1bHQ6djE6V0J1QkJIUCtmam05VWNQTVMzc1B1WnRLcEYxc0xPdUpnZ1pHc1hEVEhTRTYvOENhbm9JS2oxVTYydVFXUHpOYW9MenRJUlVSeXhHRzU1VFE0NHhPYndKbFBkYSsxQmY4MUdJVFE4d25yNkJ6aEc0UGNrN0ZaY0E9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    secret_key: eyJkYXRhIjoidmF1bHQ6djE6ZkNsUmZhV1hvdHJkU004YUZXeTc3Nkc3TXp5RncxV2Z2N0ZTNE8xQWZzVXczSGVBR2s4b1htQ21aRVlFS3VEOTN3QVh2K0hseGRKVk96UE5BbEVONkNSN1FPTT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  quartz-datasource-superbi:
+    user: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6RlpYN3hiSEQ0Vnc2QUo2L3B3WlRxczMxVWJnaDBSU3EwTVJoUjBHR2FMdlpUYXVtc3c9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  bigtable:
+    config: eyJkYXRhIjoidmF1bHQ6djE6UWtRbGhJcUJndFlvczh5eHVRTDZ6SFJMQnhNRGR4MFl6UE9VYVFZKzE3U2NTclF0bVhkay8yalBMckYvMEh4RW1kaW05eGFkbTVQUHU3RTFta3RWR1RiY29iYjhMMjBST1VFVHRPRjRXSFUvaHlST2xnR1R4b25uaHVLOHBzeHZZNFo3M09EZ2FiTUdESlFIUnNQTlc4VHRoU1JUeUhvLzBBL0Z2TDBMdjVPQnFoMm55cDNzRGtlM25RRzd2V0JLbWcyMEtOek40WnJWV3dBVm9SaENVMUx5V0RyVEgxdTY1WjJTQUV3WFlvZ0VTR2pUT0RiRlhsYXhaYVlxcktyRUVxVEhQTGhxcnRGd05NaHZxcDRLekx0dEJSMDd3aW1EcUlqSkpadngrZFgzbGw2RDFFakNqRlpvWi9FZ28zbmFiTWVka2xDTzZtdXN1SHR5enQ0aU54bjdhQ2llVmovVCtmYjIrWi9Vbmk2TWhkVVhiTHNlMVh6VGEyT0J6WE12bit0NVhIbWRSSzh4dzJ6VlBrUnJsb2w3WmVnKzBzenJWbmNkZG5STWhFSzdLTjZTUFdIcmQzM0FvOU1qZGkzZGFLYkJvbGh1d0docXpVRGdTT2wvMEpQeXB2M3NZV01ZM29POHVDZXhWMWpkY3Z6a1Nlb3Vja1ZlcEMrelg5MWFRUjVEdmtWb0FjNU5BdGVKbmxwSzVOVGh0dVNMVlorMWx2aTJTMEhKc3JsbGlKWTNvUndhN1BsSE5XenZIWHpYUFg1M1RjK21rL0l1T2V3SGxyVmpMZDFTa3h1RXhGcU5UMG9xMCt1RUZnaUs0aEs3MGV6cWtPNkVyem1nai92TXUzK0Q0OGllVDlhKzFDZjNQdHpSempDTFVJVFR0eGorT1ZxVjVvYU0yenpRa09Md2IzNVZIWHRlOGN4R09PbnFyWXR3TC9XdUcvSjQ2NnV0WDVFaHdDb3dLWnBwYloxRkFPcGxzZnVud2pSeEg0dFRUQkE2VDhBMGFnSU9lQ1ZKQURzaGN6cklzQ2JabzZnbFNuSEUwekNwWXJNdXd5UGpqSkVVWDdJKzd2dkVsZHFHME9BRU12NmNqOWljWHc2dUdDM2YyWHNaTXFoV0ZldWNKL2NoenVoS05taUJZUVpHUjFhV0dxTGkzZ3locDQ0OW1KT3U2VVkzYjRtd2l0YkMrNXFlaWpGdmQxbFQ5TWpabThvNzdMVU5HVFlRN0I4ZFlwMGxOTjRId3RzMWdTUURvbkhQdWtnTjE4VER2UkZnbUZ5ZjJVY2NoUFBEeVp4a1NqYVBnYjRxVVRYN2lUZHFtZytjVmh4VXZsTitZbGQ2bXB0aGxLUXRkZS94d1FZOWwvRlNWZ0gybzZaSmw0dkNXSC90RUtHbGtUakltODVnNjZGY1JUL2tveWFETWxjWkJFSXF2MkFqdSthdlU3QUM3T21SUDRXRmpDYWpjck5NbVIvWmlOVGNpQzB2OEJRY1NRV3VsUlh3WC9Cbm5qUmZzTzJXT3FYYkI4SGV3M0RuL05wajNGVzYrZGQ0S1FLZlJZd04yWjU0am0vdkRYM056dmdKY2g2dXJoRFpnaFdTRk5QTW5OdkNaZi9Ibjd6SGR0VTNxSlZxMlBGcVdkekMvTWZGME1YbVR0QnhZL1dPNEY3L0c1WmdOVjZGSzBTQUlqSklrYm10WEpLbUhhNU8wbWNUOGxRaXJ0dDYxdkRFa3VoS0c1WncvUXBYWlNpdG8wSFBBWE1TeVFCVFhsOGppdFpydEhHRVQyTXpvV0VOeVlJaXZXaDdhTVVYak1pR1VDQUZ0RThXVy9RZlF6QUk1eDRCN3AvZ3g2WG1zZXZlR3B2bWo2d1ZTSWxRZGtUdDJwbEo4a005bUFEZW5FTTVDdFJRVlNpVVBwRHBmY0szeVZrOGFsM0t4cXJ4UlRSUmUrT0ZlSHNwRDNFVUtqY1lhRlJoY3A5OVVWd1lBRnY1cXVhYjJGRm5kUnczdHJTVW53d0ZUSlhLcFZGK1NMVVdxMElmVCt3VFVZRjVBY0NFR0drRExxcGFEVWYrdVBhYVVmWGpiUzNJdHZKL1FxL1o2TVVoUURtZitFd3dCbHJsVm9JS0hlbVVCdUJZOWRKRHlVMGl0UWo3bUZyN1Q1b3Z0Z2pqOEo3OVBWZHlUVEhURk0rbFJyVWlSWW9yRnl0dEV0YXJpODF6ZHZXSjJ3eVFHaW5HVzZDRXlVM1BkU20wdys5RXg5a3M2cUd3RFE2S1NYazNWWFFHRWdDdFRRUzFYTU1hLzRrcXNRaGxlRW9wdjlxaGIrWjRCM2lSZGJMTWxzdlRyZzRNcDhDSFJiN3VxWHgzZ0tKN0hqdGlTeG1IVEZzTUhXSmM4R0RTWVUrcE9jV01HaU5jUmdaV3RmRGwzSEFtL21iSitnNXl6Qi8vcnE5K3V5ZkorampoaG90cHJmWjRWMlZWckV3QXNrWk9SNld1VTNpOXJzK0lpVHI2S0dTeU8vdkNkd1hDTVk4WUhFN28zS0VRNTdScFl0V0RoQjFjeEdvVkNKSlo2dERqODZQS3E2UUFKRmdkN0drZVI4NHpzMno5aG52U1JYdWNkd3EzWnI5VXVxNzRhL0VUcjFBQzdObjgxQ3lmOUQxQ0tVRUFHdzIrU1VKQXZNSkNtVm42R3pMQ3BONVoxcytHT1Z5RVVvTlJwM2laL2VlcnRiS1VTcEJudzhiUkF5UGRZdUdkYkR6TVF3ZCtFS2FidldwbHZkQnBmTXdwa21tRUxLdHFKd1pYUGdsWlNNSWpndUtHeXJRbU0yRldjMlFIN082VENDUEJjUEhlOXpGdkxPSURuZUpqWHgwanVrVERSeS9MbEFkRWhEVVN3a002c1ptRHVvaXlEcHorUVdUZ01mbUhMV1pLK29iekFLZlRaR2tEOVorZFJqb0xaS1pNSllUVitJZExUdGh1WVVhb3NMVnlMVjFQZ1Y1SGR6ZnlrY051NldQUzdSbjFyVnhpY1o4Q3NuQkxrTExTSnBRbTYyWVZWU01Oc3V4eFlQd1FmSU1hNkVSTlBSYzRPaHVGVnkzUnRuWHBWYmhEczNpKzExQlZEVEMyTmFIWkFvbFhqQmNHRUZtRFJBK05RZmhmTDJ0UHdTWWZxUzBwTWtGV1lxNWs1Y3hOc084b0V0alJvRFMxY1RlaDYybVRYMDA3ZUUrM0srOXF6SXNWNXJEeXlPTklCMFNUS1VPU3M4UWVnTkR1WWhtVzg4NXFzK0JTTnB0S3Y4RXA3QUh1bVZCMmZkM2h4dWJCNE1LZE5lZE9DRG1GSm9UY3lIZHFVMWk2bHdSajJVVlhJa3JYQ0Q3WllyVlVDV0ZnTU1TUGJxalkwaDFsbXcrNEprYldwbUZrYlRhMGtSemdDb0VwODRJSkY2M0JUMDcxaHAva2dyUzljRGhRNzJXa2kxRENEYnR0d1kzbzV4TWM4V0RtajNuT3JpVkpwZVo4dkdCdkhvN1dTTEdsWnRnWnRta2YiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  ranger:
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6b2ZZYlkrb051bmZQVkU4YThIOXp6TnJrVlhvK3dSMkNFVnVwTVgzNHF3eVpMeDBraEJIT3EyUEtXVGhYV2ZwcCIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    user_password: eyJkYXRhIjoidmF1bHQ6djE6MHdRT2V0WTBuOEoyMG1lV3liaTZSTFQ0bm10Q3Q0eDE0WXJ0aXBlZ1NxWk02WnpDIiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+  jasper:
+    username: eyJkYXRhIjoidmF1bHQ6djE6MGM2cG9zUHRKeHlqZTI5dnF1ZTFGOHlhMFN0QXdpK01BY2FIVnVwTVdOajJFQlI2Umc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6MGM2cG9zUHRKeHlqZTI5dnF1ZTFGOHlhMFN0QXdpK01BY2FIVnVwTVdOajJFQlI2Umc9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  saiku:
+    username: eyJkYXRhIjoidmF1bHQ6djE6NTFSd0pMMXE4SVlzOXk1U0lmVTFMSzdvT1BGWTlJaVduekxaM3RIMzFwR1AiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    password: eyJkYXRhIjoidmF1bHQ6djE6NTFSd0pMMXE4SVlzOXk1U0lmVTFMSzdvT1BGWTlJaVduekxaM3RIMzFwR1AiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  fireball-consumer-lag:
+    username: eyJkYXRhIjoidmF1bHQ6djE6ZGwzMEF2aExRb1RwNEZzckFZcnd6bUVuVS9JWnh0V050TTU5REp6czZZNnJRaTFSQTVsMVFyeE5pN09jSnBvbEFRPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    password: eyJkYXRhIjoidmF1bHQ6djE6ZGwzMEF2aExRb1RwNEZzckFZcnd6bUVuVS9JWnh0V050TTU5REp6czZZNnJRaTFSQTVsMVFyeE5pN09jSnBvbEFRPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  fireball-metrics:
+    username: eyJkYXRhIjoidmF1bHQ6djE6dU52VjF0S1hLTisyM0s0QUhPOUJ5dTVqdjJmbG8xQ3RQVTZDQ0dQVmZIRHpPQjNnUTBOZWNlSjVrZzA9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+    password: eyJkYXRhIjoidmF1bHQ6djE6dU52VjF0S1hLTisyM0s0QUhPOUJ5dTVqdjJmbG8xQ3RQVTZDQ0dQVmZIRHpPQjNnUTBOZWNlSjVrZzA9Iiwia2V5SWQiOiJGRFAtU1NJX3N1YnRtOjpzdGFnZSJ9
+  query-cache:
+    username: eyJkYXRhIjoidmF1bHQ6djE6VWt1Mnl6YkdlUUZGKzdKK2NZOTJXODAyM0swU3BNYmdQb0VhcktEYm9vbVlRbWFxUmZpbiIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6VWt1Mnl6YkdlUUZGKzdKK2NZOTJXODAyM0swU3BNYmdQb0VhcktEYm9vbVlRbWFxUmZpbiIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+  jira:
+    username: eyJkYXRhIjoidmF1bHQ6djE6T04vRmpuN2JBTzFaZzlmZXpSUWJ0VzJiQyt6Zm91TDd6WkR1bHhIdWNxOU01OUZHSVE9PSIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6c3RhZ2UifQ==
+    password: eyJkYXRhIjoidmF1bHQ6djE6MUl1NkpySHBrbzYxZFVPZmV5aVo2Um5ROUhjVy9ZN1RjSW93WUdwblRhc25nak1JLzMvV0l3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+
+configs:
+  hosts-populator-keys:
+    k8s-fpg-hp.conf: "prod-fdp-galaxy-hostnames"
+
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.web.exception.SuperBiExceptionMapper: "INFO"
+          com.flipkart.fdp.superbi.web.logger.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-web/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+          com.flipkart.fdp.superbi.core.adaptor.DSQueryUtil:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-web/server/serialization-error.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/server/serialization-error-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %replace(%msg %ex){'\n', '\u2028'} %nopex %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-web/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.web.resources"
+      environmentConfig:
+        env: env
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-web/server/remove-this-file-to-bbr
+    config.json: |
+      {
+        "bigtable.config": "${BIGTABLE_CONFIG}",
+        "db.gringotts.connectionTimeout": "\"5\"",
+        "db.gringotts.acquireRetryDelay": "\"5\"",
+        "subscription.jobConfig": "{\"backOffTimeInMillis\":300000}",
+        "superbi.dataSource.BQ_BATCH_P0": "{\"storeIdentifier\": \"BQ_BATCH_P0\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH\"},\"attributes\": {\"clientId\": \"${SUPERBI_DATASOURCE_BQ_BATCH_P0_CLIENT_ID}\",\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_BATCH_P0_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"bqext_bigfoot_external_neo\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "superbi.dataSource.BQ_BATCH_P1": "{\"storeIdentifier\": \"BQ_BATCH_P1\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_BATCH_P1_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"bqext_bigfoot_external_neo\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "audit.database.acquireRetryAttempts": 3,
+        "superbi.org.quartz.jobStore.isClustered": true,
+        "superbi.dataSource.BQ_REALTIME_DEFAULT": "{\"storeIdentifier\": \"BQ_REALTIME_DEFAULT\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_REALTIME\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_REALTIME_DEFAULT_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "PowerBIAuth.clientId": "\"${POWERBIAUTH_CLIENT_ID}\"",
+        "superbi.org.quartz.scheduler.instanceId": "AUTO",
+        "scheduler.runJobs": "false",
+        "mail.server.username": "\"${MAILSERVER_USERNAME}\"",
+        "cosmos_read.database.partitionCount": 5,
+        "superbi.org.quartz.jobStore.misfireThreshold": 60000,
+        "superbi.calculatePriority": "{\"ElasticSearch2_P1\":true,\"ElasticSearch2_DEFAULT\":true}",
+        "scheduler.enable": "true",
+        "brv2.pubsubLiteInfraConfig": "{\"infraref-1\":{\"cloudRegion\":\"asia-south1\",\"cloudZoneId\":\"a\",\"projectId\":499914730725,\"maxAllowedMessages\":500,\"maxAllowedBytes\":30000,\"retrySettings\":{\"initialRetryDelayMillis\":1000,\"initialRPCTimeoutMillis\":1000,\"maxAttempts\":5,\"maxRetryDelayMillis\":7000,\"maxRPCTimeoutMillis\":7000,\"retryDelayMultiplier\":1.5,\"rpcTimeoutMultiplier\":1.5,\"totalTimeoutMillis\":15000}, \"isBatchEnabled\":false, \"elementCountThreshold\":100,\"requestByteThreshold\":100,\"delayThreshold\":10}}",
+        "logger.application": "INFO",
+        "db.gringotts.user": "${GRINGOTTS_DB_USER}",
+        "d42.endPoint": "https://storage.googleapis.com",
+        "org.quartz.threadPool.threadPriority": 5,
+        "db.hydra.acquireRetryDelay": "\"5\"",
+        "cosmos.database.userName": "${COSMOS_DATABASE_USERNAME}",
+        "readOperationAudit.enable": "true",
+        "superbi.dataSource.BIG_QUERY_STORAGE_DEFAULT": "{\"storeIdentifier\": \"BIG_QUERY_STORAGE_DEFAULT\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH_V2\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_STORAGE_DEFAULT_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"bigfoot_external_neo\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":100,\"minimumNumberOfCalls\":1,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":1,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "cosmos.database.connectionTimeout": "\"5\"",
+        "Cosmos.enable": "true",
+        "db.hydra.partitionCount": 5,
+        "superbi.messageQueue": "PUBSUB_LITE",
+        "query_meta.name": "\"${QUERY_META_NAME}\"",
+        "query_meta.password": "\"${QUERY_META_PASSWORD}\"",
+        "db.hydra_read.user": "${HYDRA_READ_DB_USER}",
+        "cosmos_write.database.password": "${COSMOS_WRITE_DATABASE_PASSWORD}",
+        "superbi.defaultBackgroundRefresherConfig": "{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":28,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{},\"d42MaxSizeInMB\":1024, \"brv2TrafficFactor\":0.0}",
+        "db.hydra_read.partitionCount": 5,
+        "superbi.dataSource.ElasticSearch2_DEFAULT": "{\"storeIdentifier\": \"ElasticSearch2_DEFAULT\",\"dslConfig\":{\"elasticsearch_version\":\"7.4\"},\"attributes\": {\"scrollAliveTime\": \"1m\",\"isCacheEnabled\": \"true\",\"scrollBatchSize\": \"5000\",\"termFetchSize\": \"10000\",\"queryPollingFrequencyInSec\": \"1\",\"aggr_bucket_size\": \"10000\",\"queryTimeOutMs\": \"30000\",\"requestTimeoutMs\": \"200000\",\"port\": \"9200\",\"defaultTTLInSec\": \"5\",\"max_threads\": \"50\",\"budgetCacheKeyTTLInSec\": \"1800\",\"clusterName\": \"prod-fstream-superbi-es7\",\"host\": \"10.47.103.12:9200\",\"failedQueryTTLInSec\": \"300\",\"cachePollingTimeMs\": \"1000\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 50,\"permittedNumberOfCallsInHalfOpenState\":5} ,\"sourceType\": \"ELASTIC_SEARCH\"}",
+        "audit.database.acquireIncrement": 1,
+        "superbi.subscription.pollTimeoutInMillis": 3000,
+        "cosmos_read.database.minConnectionsPerPartition": 10,
+        "superbi.dataSource.HDFS_DEFAULT": "{\"storeIdentifier\": \"HDFS_DEFAULT\",\"dslConfig\":{\"IS_BADGER_ENABLED\": \"false\"},\"attributes\": {\"jdbcUrl\":\"jdbc:hive2://fkp-fdp-galaxy-sun-zkjn-0001.c.fkp-fdp-galaxy.internal:2181,fkp-fdp-galaxy-sun-zkjn-0002.c.fkp-fdp-galaxy.internal:2181,fkp-fdp-galaxy-sun-zkjn-0003.c.fkp-fdp-galaxy.internal:2181,fkp-fdp-galaxy-sun-zkjn-0004.c.fkp-fdp-galaxy.internal:2181,fkp-fdp-galaxy-sun-zkjn-0005.c.fkp-fdp-galaxy.internal:2181/default;transportMode=http;httpPath=cliservice;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=fkp-fdp-galaxy-hive3-hs2-agni?hive.execution.engine=tez;hive.metastore.client.socket.timeout=180;hive.server.tcp.keepalive=true;hive.server.read.socket.timeout=300;job.initiator.name=SUPERBI\",\"username\":\"${SUPERBI_DATASOURCE_HDFS_DEFAULT_USERNAME}\",\"password\":${SUPERBI_DATASOURCE_HDFS_DEFAULT_PASSWORD},\"queue\":\"superbi\",\"priorityClient\":\"subscription\",\"recoveryTimeOutLimitMs\":\"43200000\",\"initScripts\":\"[\\\"ADD JAR gs:\\/\\/fkpdp-mhosy-2nig-1a5d-systemlibs\\/libraries\\/hive\\/jars\\/hive-udfs-1.0-SNAPSHOT.jar\\\",\\\"CREATE TEMPORARY FUNCTION lookup as 'com.flipkart.bigfoot.dimlookup.udf.HiveLookupUDF'\\\",\\\"CREATE TEMPORARY FUNCTION arrToString as 'com.flipkart.fdp.CustomCaster'\\\",\\\"CREATE TEMPORARY FUNCTION lookupkey as 'com.flipkart.bigfoot.dimlookup.udf.HiveKeyGeneratorUDF'\\\",\\\"CREATE TEMPORARY FUNCTION lookup_date as 'com.flipkart.bigfoot.dimlookup.udf.DateLookupUDF'\\\",\\\"CREATE TEMPORARY FUNCTION lookup_time as 'com.flipkart.bigfoot.dimlookup.udf.TimeLookupUDF'\\\",\\\"CREATE TEMPORARY FUNCTION aggregate_filter as 'com.flipkart.bigfoot.dimlookup.udf.AggregateConditionUDF'\\\",\\\"CREATE TEMPORARY FUNCTION aggregate as 'com.flipkart.bigfoot.dimlookup.udf.AggregateUDF'\\\",\\\"CREATE TEMPORARY FUNCTION ISOToSqlTs as 'com.flipkart.bigfoot.dimlookup.udf.DateISOToSqlUDF'\\\",\\\"CREATE TEMPORARY FUNCTION business_date_diff as 'com.flipkart.bigfoot.dimlookup.udf.BusinessDayDiffUDF'\\\",\\\"set hive.merge.mapfiles=true\\\",\\\"set hive.merge.mapredfiles=true\\\",\\\"set mapreduce.input.fileinputformat.input.dir.recursive=true\\\",\\\"set mapred.max.split.size=1073741824\\\",\\\"set mapred.min.split.size=1073741824\\\",\\\"set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat\\\",\\\"set hive.merge.tezfiles=true\\\",\\\"set hive.merge.smallfiles.avgsize= 560000000\\\",\\\"set hive.strict.checks.cartesian.product=false\\\",\\\"set hive.merge.size.per.task= 560000000\\\",\\\"set mapred.job.queue.name=query\\\",\\\"set hive.optimize.index.filter=true\\\",\\\"set mapreduce.map.memory.mb=3072\\\",\\\"set mapreduce.map.java.opts=-Xmx2456m\\\",\\\"set mapreduce.reduce.memory.mb=3072\\\",\\\"set mapreduce.reduce.java.opts=-Xmx2456m\\\",\\\"set mapreduce.job.running.map.limit=10000\\\",\\\"set tez.queue.name=query\\\",\\\"set hive.tez.container.size= 3072\\\",\\\"set tez.am.mode.session=false\\\",\\\"set tez.am.container.idle.release-timeout-max.millis=5000\\\",\\\"set tez.am.container.idle.release-timeout-min.millis=2000\\\",\\\"set hive.cbo.enable=false\\\"]\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":1000,\"maxConcurrentCalls\": 1000,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true,\"slidingWindowSize\":1000},\"sourceType\": \"HDFS\",\"limit\":-1}",
+        "superbi.d42.expiryInSeconds": 604800,
+        "superbi.d42UploadClientsStr": "[\"subscription\",\"download\"]",
+        "superbi.dataSource.BQ_REALTIME_P0": "{\"storeIdentifier\": \"BQ_REALTIME_P0\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_REALTIME\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_REALTIME_P0_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "superbi.dataSource.BQ_REALTIME_P1": "{\"storeIdentifier\": \"BQ_REALTIME_P1\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_REALTIME\",\"BQ_REALTIME_VIEWS\": \"true\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_REALTIME_P1_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"fdp_ssi_realtime_views\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":100,\"minimumNumberOfCalls\":1,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "superbi.checkDSQuerySerialization": "{\"FStream_DEFAULT\":true,\"HDFS_DEFAULT\":true,\"HDFS_GCP\":true,\"BQ_REALTIME_DEFAULT\":true,\"BQ_REALTIME_P0\":true,\"BQ_REALTIME_P1\":true,\"BQ_REALTIME_CRITICAL\":true,\"BQ_BATCH_DEFAULT\":true,\"BQ_BATCH_P0\":true,\"BQ_BATCH_P1\":true,\"BQ_PLATO\":true,\"BQ_PLATO_EUCLID\":true,\"BQ_BATCH_HDFS\":true,\"BQ_BATCH_CRITICAL\":true,\"BQ_REALTIME_APPEND_ONLY\":true,\"BIG_QUERY_STORAGE_DEFAULT\":true}",
+        "cosmos.database.acquireIncrement": 1,
+        "superbi.client.defaultPrivilege": "{\"reportAction\":\"VIEW\",\"dataPrivilege\":{\"limit\":100000,\"limitPriority\":\"MIN\"}}",
+        "db.gringotts.driver": "com.mysql.jdbc.Driver",
+        "audit.jdbc.url": "\"jdbc:mysql://10.119.212.223/audit_new\"",
+        "org.quartz.scheduler.batchTriggerAcquisitionFireAheadTimeWindow": 150000,
+        "db.hydra_read.url": "\"jdbc:mysql:loadbalance://10.119.212.223,10.119.212.223/hydra_new?loadBalanceConnectionGroup=hydraRead&loadBalanceEnableJMX=true&loadBalanceBlacklistTimeout=1000\"",
+        "org.quartz.scheduler.rmi.proxy": false,
+        "AUTHN.SECRET": "\"${AUTHN_SECRET}\"",
+        "auth.persistenceUnit": "\"PROD_DEFAULT_PU\"",
+        "auth_cache.reportCacheTTLInSec": 5,
+        "auth_cache.cacheTTLInSec": 60,
+        "auth_cache.password": "${AUTH_CACHE_PASSWORD}",
+        "auth_cache.name": "${AUTH_CACHE_NAME}",
+        "auth_cache.enable": "true",
+        "auth_cache.targetCacheEnabled": "false",
+        "auth_cache.targetCacheTTLInSec": 43200,
+        "auth_cache.reportCacheEnabled": "false",
+        "session_store.name": "\"${SESSION_STORE_NAME}\"",
+        "session_store.password": "\"${SESSION_STORE_PASSWORD}\"",
+        "d42.cleanup.alerts.mail": "\"deepak.barr@flipkart.com\"",
+        "superbi.factRefreshTimeRequired": "[\"HDFS_DEFAULT\",\"HDFS_GCP\",\"BQ_BATCH_DEFAULT\",\"BQ_BATCH_P0\",\"BQ_BATCH_P1\",\"BQ_PLATO\",\"BQ_PLATO_EUCLID\",\"BQ_BATCH_HDFS\",\"BQ_BATCH_CRITICAL\",\"BIG_QUERY_STORAGE_DEFAULT\"]",
+        "scheduler.config": "{\"alertMail\":\"fdp-ssi-dev@flipkart.com\",\"allowMultipleInstance\":true,\"threadPoolSize\":150,\"url\":\"jdbc:mysql://10.117.200.115:3306/superbi_schedules\",\"user\":\"${SCHEDULER_CONFIG_USER}\",\"password\":\"${SCHEDULER_CONFIG_PASSWORD}\",\"maxConn\":30,\"schedulerName\":\"SubscriptionScheduler\"}",
+        "superbi.fullDataClients": "[\"subscription\",\"download\"]",
+        "query_results.name": "\"${QUERY_RESULTS_NAME}\"",
+        "superbi.org.quartz.dataSource.quartzDataSourceSuperbi.maxConnections": 30,
+        "superbi.org.quartz.scheduler.skipUpdateCheck": true,
+        "scheduler.alerts.mail": "\"fdp-alerts@flipkart.com\"",
+        "superbi.apiKeys": "[{\"clientId\":\"${SUPERBI_APIKEYS_DEFAULT_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_DEFAULT_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_FDPGUI_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_FDPGUI_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_FDPSSI_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_FDPSSI_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_FDPDE_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_FDPDE_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_SUSCRIPTION_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_SUSCRIPTION_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_DOWNLOAD_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_DOWNLOAD_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_FDPINGESTION_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_FDPINGESTION_CLIENT_SECRET}\"},{\"clientId\":\"${SUPERBI_APIKEYS_NFR_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_APIKEYS_NFR_CLIENT_SECRET}\"}]",
+        "org.quartz.scheduler.wrapJobExecutionInUserTransaction": false,
+        "superbi.gringotts": "{\"basePath\":\"http://gringotts.fdp-gringotts-preprod.fkcloud.in\",\"clientId\":\"${SUPERBI_GRINGOTTS_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_GRINGOTTS_CLIENT_SECRET}\",\"context\":\"hydra\",\"maxConnectionsTotal\": 1000, \"maxConnectionPerHost\": 300, \"requestTimeoutInMillies\": 10000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"maxThreads\":100,\"circuitBreakerProperties\":{  \"failureRateThreshold\":20,\"minimumNumberOfCalls\":10,\"maxConcurrentCalls\": 1000}}",
+        "superbi.dBAuditerMaxThreads": 100,
+        "PowerBIAuth.redirectUri": "\"http://fdp.fkinternal.com/c/powerbi\"",
+        "superbi.org.quartz.dataSource.quartzDataSourceSuperbi.driver": "com.mysql.jdbc.Driver",
+        "cosmos_write.database.hibernateShowSql": "false",
+        "cosmos_write.database.partitionCount": 5,
+        "audit.database.jdbcUrl": "\"jdbc:mysql://10.119.212.223/superbi_audit\"",
+        "db.hydra_read.password": "${HYDRA_READ_DB_PASSWORD}",
+        "d42.secretKey": "\"${D42_SECRETKEY}\"",
+        "successfactor.url": "\"http://172.20.76.71:8080/sfauth/spring-ws/authproxy\"",
+        "db.gringotts.minConnectionsPerPartition": 40,
+        "db.hydra.connectionTimeout": "\"5\"",
+        "mail.users": "true",
+        "d42.link.expiry.days": "7",
+        "modifyOperationAudit.enable": "true",
+        "superbi.subscription.dataClient": "{\"basePath\":\"http://superbi-subscription.fdp-superbi-subscription-preprod.fkcloud.in/\",\"maxConnectionsTotal\": 100, \"maxConnectionPerHost\": 100, \"requestTimeoutInMillies\": 12000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"dataCallPath\":\"reports/${org}/${namespace}/${reportName}/data\",\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100},\"apiAuthConfigMap\":{\"download\":{\"clientId\":\"${SUPERBI_SUBSCRIPTION_DATACLIENT_DOWNLOAD_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_SUBSCRIPTION_DATACLIENT_DOWNLOAD_CLIENT_SECRET}\"},\"subscription\":{\"clientId\":\"${SUPERBI_SUBSCRIPTION_DATACLIENT_SUBSCRIPTION_CLIENT_ID}\",\"clientSecret\":\"${SUPERBI_SUBSCRIPTION_DATACLIENT_SUBSCRIPTION_CLIENT_SECRET}\"}}}",
+        "superbi.qaasClient": "{\"host\":\"http://qaas-validator.fdp-qaas-validator-playground.fkcloud.in\",\"downloadEndPoint\":\"http://fdp.fkinternal.com/query/result\",\"clientId\": \"${SUPERBI_QAASCLIENT_CLIENT_ID}\", \"clientSecret\": \"${SUPERBI_QAASCLIENT_CLIENT_SECRET}\", \"context\": \"\",\"readTimeOut\":1,\"blockingTimeout\":2,\"connectTimeout\":2000000}",
+        "PowerBIAuth.resource": "\"https://analysis.windows.net/powerbi/api\"",
+        "db.hydra_read.acquireRetryAttempts": 3,
+        "superbi.d42MaxSizeInMB": 1024,
+        "superbi.org.quartz.threadPool.class": "org.quartz.simpl.SimpleThreadPool",
+        "superbi.c3p0.maxStatementsMultiplier": 0,
+        "AUTHN.CLIENT_ID": "\"${AUTHN_CLIENT_ID}\"",
+        "superbi.org.quartz.dataSource.quartzDataSourceSuperbi.URL": "jdbc:mysql://10.119.212.223/superbi_schedules",
+        "PowerBIAuth.clientName": "${POWERBIAUTH_CLIENT_NAME}",
+        "superbi.org.quartz.scheduler.wrapJobExecutionInUserTransaction": false,
+        "org.quartz.scheduler.rmi.export": false,
+        "subscription.maxDaysLeftForComm": 30,
+        "superbi.default.emailClient": "{\"userName\":\"${SUPERBI_DEFAULT_EMAIL_CLIENT_USERNAME}\",\"password\":\"${SUPERBI_DEFAULT_EMAIL_CLIENT_PASSWORD}\",\"host\":\"10.47.107.10\"}",
+        "db.hydra.driver": "com.mysql.jdbc.Driver",
+        "subscription.email.expirationCommTemplate": "\"Hi, <br/><br/> You are receiving this e-mail because you are subscribed to the report <b> ${reportName} </b> <br/><br/>Your subscription will expire on ${expiryDate}. Please refer this document to renew subscription https://docs.google.com/document/d/1PAw2HcfijLDzWZ-5B1J3ydylH-bAkr3PNlL3Drlke6I/edit?usp=sharing. <br/><br/> Thanks<br/>Team FDP<br/><br/>In case, you face any problem please contact us at go/fdp-support <br/>\"",
+        "d42.accessKey": "${D42_ACCESSKEY}",
+        "lock_store.password": "\"${LOCK_STORE_PASSWORD}\"",
+        "subscription.email.failureTemplate": "\"Hi, <br/><br/> You are receiving this e-mail because you are subscribed to the report <b> ${reportName} </b>.<br/><br/>Your report failed with exception<br/><br/>${exception}<br/><br/> Thanks<br/>Team FDP<br/><br/>In case, you face any problem please contact us at go/fdp-support <br/>\"",
+        "db.gringotts.maxPoolSize": 400,
+        "db.gringotts.url": "\"jdbc:mysql://10.119.212.223/gringotts\"",
+        "authN.enable": "true",
+        "cosmos_read.database.jdbcUrl": "\"jdbc:mysql:loadbalance://10.119.212.55,10.119.212.30/cosmos?loadBalanceConnectionGroup=cosmosRead&loadBalanceEnableJMX=true&loadBalanceBlacklistTimeout=600000\"",
+        "cosmos_write.database.userName": "${COSMOS_WRITE_DATABASE_USERNAME}",
+        "superbi.dataSource.BQ_REALTIME_APPEND_ONLY": "{\"storeIdentifier\": \"BQ_REALTIME_APPEND_ONLY\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_REALTIME_APPEND_ONLY_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"fdp_ssi_realtime_views\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "superbi.org.quartz.threadPool.threadCount": 1,
+        "db.hydra_read.acquireRetryDelay": "\"5\"",
+        "PowerBIAuth.tokenUrl": "\"https://login.microsoftonline.com:443/Flipkart.com/oauth2/token\"",
+        "AuditAndRecon.enable": "true",
+        "audit.file.maxThreads": 100,
+        "audit.database.password": "\"${AUDIT_DB_PASSWORD}\"",
+        "org.quartz.jobStore.isClustered": true,
+        "audit.database.hibernateShowSql": "false",
+        "audit.database.maxPoolSize": 10,
+        "AUTHN.URL": "\"http://10.47.0.167/.well-known/openid-configuration\"",
+        "default.userName": "\"${DEFAULT_USERNAME}\"",
+        "db.hydra_schedules.url": "\"jdbc:mysql://10.119.212.223/hydra_quartz_tables\"",
+        "AuditStoreFileLogger.enable": "true",
+        "cosmos_read.database.acquireRetryDelay": "\"5000\"",
+        "cosmos_read.database.connectionTimeout": "\"300\"",
+        "db.hydra_read.maxConnectionsPerPartition": 20,
+        "db.gringotts.password": "${GRINGOTTS_DB_PASSWORD}",
+        "superbi.elasticSearch.costBoost": "{\"TERM\":1,\"AGGR\":1}",
+        "PowerBIAuth.enable": "true",
+        "superbi.org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread": true,
+        "reportRefresh.time": 300000,
+        "query_results.password": "\"${QUERY_RESULTS_PASSWORD}\"",
+        "superbi.d42": "{\"d42Endpoint\":\"https://storage.googleapis.com\",\"projectId\":\"fks-ssi-gcs\",\"accessKey\":\"${SUPERBI_D42_ACCESS_KEY}\",\"secretKey\":\"${SUPERBI_D42_SECRET_KEY}\",\"bucket\":\"ssi_reporting\",\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"maxAttempts\":3,\"retryExceptions\": [\"com.amazonaws.AmazonClientException\",\"com.amazonaws.AmazonServiceException\"]}}",
+        "superbi.ironbank": "{\"basePath\":\"http://ironbank-backend.fdp-ironbank-prod.fkcloud.in\",\"port\":-1,\"maxConnectionsTotal\": 100, \"maxConnectionPerHost\": 100, \"requestTimeoutInMillies\": 10000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"maxThreads\":100,\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100}}",
+        "cosmos_write.database.maxConnectionsPerPartition": 25,
+        "superbi.dataSource.FStream_DEFAULT": "{\"storeIdentifier\":\"FStream_DEFAULT\",\"attributes\":{\"queryTimeOutMs\":\"15000\",\"port\":\"80\",\"isCacheEnabled\":\"false\",\"defaultTTLInSec\":\"5\",\"host\":\"http://10.47.7.195\",\"cachePollingTimeMs\":\"1000\"}, \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 50,\"permittedNumberOfCallsInHalfOpenState\":5}, \"sourceType\":\"FSTREAM\"}",
+        "environmentConfig.env": "preprod",
+        "db.gringotts.partitionCount": 5,
+        "audit.enable": "true",
+        "superbi.mmgClient": "{\"basePath\":\"http://mmg.fdp-mmg-preprod.fkcloud.in\",\"port\":80,\"maxConnectionsTotal\": 100, \"maxConnectionPerHost\": 100, \"requestTimeoutInMillies\": 10000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"maxThreads\":100,\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100}}",
+        "superbi.batchCubeGuardrailConfig": "{\"batchCubesFactList\": [\"euclid_cdo_batch_fact\"], \"globalEnablePartitionKeyValidation\": true }",
+        "db.hydra_schedules.password": "${HYDRA_SCHEDULES_DB_PASSWORD}",
+        "AuditStoreDbLogger.enable": "true",
+        "superbi.executorService.threadCount": 1000,
+        "cosmos.source.name": "\"${COSMOS_SOURCE_NAME}\"",
+        "mail.server.password": "\"${MAILSERVER_PASSWORD}\"",
+        "superbi.org.quartz.jobStore.clusterCheckinInterval": 600000,
+        "subscription.email.template": "\"Hi, <br/><br/> You are receiving this e-mail because you are subscribed to the report <b> ${reportName} </b>.<br/><br/>Click on the link below to download the report.<br/><br/>${link} <br/><br/> <b>( The link will expire on ${expiryDate}. )</b><br/><br/> Thanks<br/>Team FDP<br/><br/>In case, you face any problem please contact us at go/fdp-support <br/>\"",
+        "cosmos_read.database.password": "\"${COSMOS_READ_DB_PASSWORD}\"",
+        "cosmos.database.hibernateShowSql": "false",
+        "subscription.maxRunsLeftForComm": 7,
+        "PowerBIAuth.reportUrl": "\"https://api.powerbi.com:443/v1.0/myorg/groups/\"",
+        "superbi.org.quartz.scheduler.rmi.export": false,
+        "bbdDashboardRefresh.time": 65000,
+        "superbi.dataSource.ElasticSearch2_P0": "{\"storeIdentifier\": \"ElasticSearch2_P0\",\"dslConfig\":{\"elasticsearch_version\":\"7.4\"},\"attributes\": {\"scrollAliveTime\": \"1m\",\"isCacheEnabled\": \"true\",\"scrollBatchSize\": \"5000\",\"termFetchSize\": \"10000\",\"queryPollingFrequencyInSec\": \"1\",\"aggr_bucket_size\": \"10000\",\"queryTimeOutMs\": \"30000\",\"requestTimeoutMs\": \"200000\",\"port\": \"9200\",\"defaultTTLInSec\": \"5\",\"max_threads\": \"50\",\"budgetCacheKeyTTLInSec\": \"1800\",\"clusterName\": \"hyd-prod-fstream-superbi-es7\",\"host\": \"10.47.107.148:9200\",\"failedQueryTTLInSec\": \"300\",\"cachePollingTimeMs\": \"1000\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true} ,\"sourceType\": \"ELASTIC_SEARCH\"}",
+        "cosmos_read.database.acquireRetryAttempts": 0,
+        "superbi.hostPopulatorBucket": "[\"prod-fdp-galaxy-hostnames\"]",
+        "superbi.dataSource.ElasticSearch2_P1": "{\"storeIdentifier\": \"ElasticSearch2_P1\",\"dslConfig\":{\"elasticsearch_version\":\"7.4\"},\"attributes\": {\"scrollAliveTime\": \"1m\",\"isCacheEnabled\": \"true\",\"scrollBatchSize\": \"5000\",\"termFetchSize\": \"10000\",\"queryPollingFrequencyInSec\": \"1\",\"aggr_bucket_size\": \"10000\",\"queryTimeOutMs\": \"30000\",\"requestTimeoutMs\": \"200000\",\"port\": \"9200\",\"defaultTTLInSec\": \"5\",\"max_threads\": \"50\",\"budgetCacheKeyTTLInSec\": \"1800\",\"clusterName\": \"prod-fstream-superbi-es7\",\"host\": \"10.47.103.12:9200\",\"failedQueryTTLInSec\": \"300\",\"cachePollingTimeMs\": \"1000\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 50} ,\"sourceType\": \"ELASTIC_SEARCH\"}",
+        "superbi.defaultCacheExpirayConfig": "{\"evictEverythingBeforeTimestamp\":1644259131000,\"refreshEverythingBeforeTimestamp\":1569331400000,\"evictErrorsBeforeTimestamp\":1585924265000,\"refreshErrorsBeforeTimestamp\":0}",
+        "cosmos.database.minConnectionsPerPartition": 10,
+        "scheduler.quartz.properties": "\"/usr/share/fdp-hydra/conf/quartz.properties\"",
+        "superbi.dBAuditerRequestTimeout": 200,
+        "cosmos_write.database.acquireIncrement": 5,
+        "org.quartz.dataSource.quartzDataSource.password": "${QUARTZ_DATASOURCE_PASSWORD}",
+        "db.hydra.maxConnectionsPerPartition": 20,
+        "Vertica.refreshThreshold": 86400,
+        "db.hydra.password": "${HYDRA_DB_PASSWORD}",
+        "cosmos_write.database.acquireRetryDelay": "\"5\"",
+        "org.quartz.dataSource.quartzDataSource.URL": "jdbc:mysql://10.119.212.223/hydra_quartz_tables",
+        "dashboardRefresh.time": 120000,
+        "superbi.org.quartz.scheduler.rmi.proxy": false,
+        "feature.targetV2.enabled": "true",
+        "evolutionplugin": "\"disabled\"",
+        "domain": "\"http://fdp.fkinternal.com\"",
+        "auth.defaultRole": "\"default\"",
+        "cosmos_write.database.connectionTimeout": "\"5\"",
+        "superbi.dataSource.BQ_REALTIME_CRITICAL": "{\"storeIdentifier\": \"BQ_REALTIME_CRITICAL\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_REALTIME\",\"BQ_REALTIME_VIEWS\": \"true\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_REALTIME_CRITICAL_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"fdp_ssi_realtime_views\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "superbi.exceptionInfoMapStr": "{\"java.lang.Exception\": {\"statusCode\": 500,\"allowMessageForward\": true, \"errorMessage\": \"We are facing server issues. Please log a ticket via http://go/fdp-oncall\"},\"javax.script.ScriptException\": {\"statusCode\": 400,\"allowMessageForward\": true},\"com.flipkart.bigfoot.cosmos.data.query.query.exp.ExprEvalException\": {\"statusCode\": 400,\"allowMessageForward\": true},\"java.sql.SQLException\": {\"statusCode\": 400,\"allowMessageForward\": true},\"org.json.JSONException\": {\"statusCode\": 400,\"allowMessageForward\": true},\"javax.persistence.NoResultException\": {\"statusCode\": 404,\"allowMessageForward\": true},\"com.flipkart.fdp.auth.common.exception.NotAuthorizedException\": {\"statusCode\": 403,\"allowMessageForward\": true,\"errorMessage\": \"You are not allowed to view theis report\"},\"com.flipkart.fdp.superbi.core.exception.MissingColumnsException\": {\"statusCode\": 409,\"allowMessageForward\": true},\"com.flipkart.fdp.superbi.core.exception.MalformedReportException\": {\"statusCode\": 400,\"allowMessageForward\": true},\"com.flipkart.fdp.superbi.core.exception.ServiceUnavailableException\": {\"statusCode\": 503,\"allowMessageForward\": true, \"errorMessage\": \"Oops!! Currently we are facing heavy load, therefore access is restricted only for priority users.\"},\"java.util.concurrent.TimeoutException\": {\"statusCode\": 503,\"allowMessageForward\": true, \"errorMessage\": \"We are facing server issues. Please try again later\"},\"java.lang.RuntimeException\": {\"statusCode\": 500,\"allowMessageForward\": true, \"errorMessage\": \"We are facing server issues. Please log a ticket via http://go/fdp-oncall\"},\"com.flipkart.fdp.superbi.exceptions.ServerSideException\": {\"statusCode\":  500,\"allowMessageForward\": true,\"errorMessage\": \"We are facing server issues. Please log a ticket via http://go/fdp-oncall\"}, \"com.flipkart.fdp.superbi.exceptions.ClientSideException\":{\"statusCode\": 412,\"allowMessageForward\": true}, \"com.flipkart.fdp.superbi.core.exception.MalformedQueryException\": {\"allowMessageForward\": true,\"statusCode\": 400},\"com.flipkart.fdp.superbi.core.exception.PartitionColumnMissingException\": {\"statusCode\": 400,\"allowMessageForward\": true, \"errorMessage\": \"Underlying report does not have a column which is partitioned in the fact.\"}}",
+        "db.hydra_read.maxPoolSize": 100,
+        "superbi.kafkaProducerConfig": "{\"key.serializer\":\"org.apache.kafka.common.serialization.StringSerializer\",\"value.serializer\":\"com.flipkart.fdp.superbi.brv2.SuperBiMessageSerializer\",\"bootstrap.servers\":\"\t10.121.81.3:9092\",\"client.id\":\"stage-superbi-brv2-producer\",\"compression.type\":\"lz4\"}",
+        "query_results.tableId": "\"query_results\"",
+        "db.hydra_read.jndiName": "\"${HYDRA_READ_DB_JNDINAME}\"",
+        "audit.database.userName": "\"${AUDIT_DB_USERNAME}\"",
+        "d42.bucket": "ssi_reporting",
+        "ElasticSearch2.refreshThreshold": 300,
+        "cosmos.database.password": "${COSMOS_DATABASE_PASSWORD}",
+        "superbi.oorFlagFilePath": "/var/lib/flipkart/fdp-superbi-web/server/remove-this-file-to-bbr",
+        "swagger.resourcePackage": "\"com.flipkart.fdp.superbi.web.resources\"",
+        "superbi.badgerClient": "{\"basePath\":\"http://console.fdp-badger-preprod.fkcloud.in\",\"port\":80,\"maxConnectionsTotal\": 100, \"maxConnectionPerHost\": 100, \"requestTimeoutInMillies\": 15000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"maxThreads\":100,\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100}}",
+        "badger.clientSecret": "\"${BADGER_CLIENT_SECRET}\"",
+        "badger.url": "\"http://console.fdp-badger-preprod.fkcloud.in:80/\"",
+        "Badger.timeout": 600000,
+        "badger.clientId": "\"${BADGER_CLIENT_ID}\"",
+        "Badger.enable": "true",
+        "badger-ui.url": "\"http://10.33.53.208:3000/\"",
+        "cosmos_write.database.maxPoolSize": 15,
+        "cosmos_read.database.hibernateShowSql": "false",
+        "db.gringotts.acquireIncrement": 1,
+        "db.hydra_read.acquireIncrement": 5,
+        "db.gringotts.maxConnectionsPerPartition": 20,
+        "org.quartz.jobStore.clusterCheckinInterval": 600000,
+        "superbi.cacheExpirayConfigs": "{\"HDFS_DEFAULT\":{\"evictEverythingBeforeTimestamp\":157770860000,\"refreshEverythingBeforeTimestamp\":1592979014000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"HDFS_GCP\":{\"evictEverythingBeforeTimestamp\":157770860000,\"refreshEverythingBeforeTimestamp\":1592979014000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_REALTIME_DEFAULT\":{\"evictEverythingBeforeTimestamp\":1644259131000,\"refreshEverythingBeforeTimestamp\":1590949799000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_REALTIME_P0\":{\"evictEverythingBeforeTimestamp\":0,\"refreshEverythingBeforeTimestamp\":1602089403000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_REALTIME_CRITICAL\":{\"evictEverythingBeforeTimestamp\":0,\"refreshEverythingBeforeTimestamp\":1602089403000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_REALTIME_P1\":{\"evictEverythingBeforeTimestamp\":1644259203000,\"refreshEverythingBeforeTimestamp\":1632827722000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_REALTIME_APPEND_ONLY\":{\"evictEverythingBeforeTimestamp\":1644259203000,\"refreshEverythingBeforeTimestamp\":1632827722000,\"evictErrorsBeforeTimestamp\": 1577692200000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_BATCH_P1\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_PLATO\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_PLATO_EUCLID\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_BATCH_HDFS\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BIG_QUERY_STORAGE_DEFAULT\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_BATCH_DEFAULT\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_BATCH_P0\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0},\"BQ_BATCH_CRITICAL\":{\"evictEverythingBeforeTimestamp\":1578570724000,\"refreshEverythingBeforeTimestamp\":157770860000,\"evictErrorsBeforeTimestamp\": 1647255105000,\"refreshErrorsBeforeTimestamp\":0}}",
+        "brv2.subscriptionInfraConfig": "{\"infraref-1\":{\"cloudRegion\":\"asia-south1\",\"cloudZoneId\":\"a\",\"projectId\":499914730725,\"maxAllowedMessages\":500,\"maxAllowedBytes\":30000,\"retrySettings\":{\"initialRetryDelayMillis\":1000,\"initialRPCTimeoutMillis\":1000,\"maxAttempts\":5,\"maxRetryDelayMillis\":7000,\"maxRPCTimeoutMillis\":7000,\"retryDelayMultiplier\":1.5,\"rpcTimeoutMultiplier\":1.5,\"totalTimeoutMillis\":15000}}}",
+        "db.hydra_schedules.user": "${HYDRA_SCHEDULES_DB_USER}",
+        "superbi.source.safeMode": "{\"HDFS_DEFAULT\": false,\"HDFS_GCP\": false,\"BQ_BATCH_DEFAULT\": false,\"BQ_BATCH_P0\": false,\"BQ_BATCH_P1\": false,\"BQ_PLATO\": false,\"BQ_PLATO_EUCLID\": false,\"BQ_BATCH_HDFS\": false,\"BIG_QUERY_STORAGE_DEFAULT\": false,\"BQ_BATCH_CRITICAL\": false,\"BQ_REALTIME_DEFAULT\": false,\"BQ_REALTIME_P0\": false,\"BQ_REALTIME_P1\": false,\"BQ_REALTIME_CRITICAL\": false,\"BQ_REALTIME_APPEND_ONLY\": false}",
+        "logger.root": "INFO",
+        "superbi.client.privilege": "{\"clientId\":{\"reportAction\":\"VIEW\",\"dataPrivilege\":{\"limit\":100000,\"limitPriority\":\"REPORT\"}},\"FDPSSI\":{\"reportAction\":\"VIEW\",\"dataPrivilege\":{\"limit\":100000,\"limitPriority\":\"REPORT\"}},\"subscription\":{\"reportAction\":\"DOWNLOAD\",\"dataPrivilege\":{\"limit\":-1,\"limitPriority\":\"SOURCE\"}},\"FDP-DE\":{\"reportAction\":\"VIEW\",\"dataPrivilege\":{\"limit\":100000,\"limitPriority\":\"REPORT\"}},\"FDGUI\":{\"reportAction\":\"VIEW\",\"dataPrivilege\":{\"limit\":100000,\"limitPriority\":\"REPORT\"}},\"download\":{\"reportAction\":\"DOWNLOAD\",\"dataPrivilege\":{\"limit\":-1,\"limitPriority\":\"SOURCE\"}},\"nfr_client\":{\"reportAction\":\"VIEW\",\"dataPrivilege\":{\"limit\":-1,\"limitPriority\":\"CLIENT\"}}}",
+        "superbi.org.quartz.jobStore.tablePrefix": "QRTZ_",
+        "FStream.refreshThreshold": 10,
+        "db.hydra.acquireIncrement": 1,
+        "superbi.subscription.expiryInSeconds": 86400,
+        "audit.jdbc.username": "${AUDIT_JDBC_USERNAME}",
+        "org.quartz.dataSource.quartzDataSource.user": "${QUARTZ_DATASOURCE_USER}",
+        "cosmos_read.database.userName": "\"${COSMOS_READ_DB_USERNAME}\"",
+        "db.hydra_read.minConnectionsPerPartition": 10,
+        "swagger.subscription.resourcePackage": "\"com.flipkart.fdp.superbi.subscription.resources\"",
+        "haproxy.hosts": "\"http://10.32.58.125:28221\"",
+        "cosmos.database.partitionCount": 5,
+        "superbi.org.quartz.scheduler.batchTriggerAcquisitionFireAheadTimeWindow": 150000,
+        "superbi.dataSource.BQ_BATCH_DEFAULT": "{\"storeIdentifier\": \"BQ_BATCH_DEFAULT\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_BATCH_DEFAULT_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"sourceProjectIdTargetFact\":\"fks-ssi-bigquery\",\"sourceDatasetNameTargetFact\":\"target_facts\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "proxyServer.url": "\"http://fdp.fkinternal.com/\"",
+        "jpa.bigfoot_read": "\"bigfoot-jndi-mysql-prod-read\"",
+        "cosmos_write.database.acquireRetryAttempts": 3,
+        "AUTHN.LOGOUT_URL": "\"http://10.47.0.167/logout\"",
+        "bbdDashboard.switchTabInterval": 86400000,
+        "superbi.org.quartz.jobStore.driverDelegateClass": "org.quartz.impl.jdbcjobstore.StdJDBCDelegate",
+        "audit.jdbc.queueSize": 200,
+        "superbi.org.quartz.scheduler.instanceName": "SubscriptionScheduler",
+        "org.quartz.jobStore.tablePrefix": "QRTZ_",
+        "AUTHN.PRIVATE_KEY_PATH": "\"/etc/fdp-hydra/extras/fk-bigfoot-hydra.pem\"",
+        "org.quartz.dataSource.quartzDataSource.driver": "com.mysql.jdbc.Driver",
+        "db.hydra_read.connectionTimeout": "\"5\"",
+        "scheduler.maxExpiryDays": 185,
+        "superbi.connektServiceConfig": "{\"smsStencilId\":\"STNZ5FQT2\",\"emailStencilId\":\"STNMAMVVJ\",\"connecktUrl\":\"http://10.47.4.150:80/\",\"apiKey\":\"BM9kig6BGwN68aeJG2ESWkxt8\",\"sla\":\"H\",\"contextId\":\"fdp-common-context\",\"smsUrlExtension\":\"\",\"emailUrlExtension\":\"v1/send/email/flipkart-promo\"}",
+        "PowerBIAuth.clientSecret": "\"${POWERBIAUTH_CLIENT_SECRET}\"",
+        "org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread": true,
+        "db.hydra.user": "${HYDRA_DB_USER}",
+        "org.quartz.scheduler.instanceName": "HydraScheduler",
+        "animation.time": 8000,
+        "superbi.backgroundRefresherConfigs": "{\"BQ_BATCH_P1\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":3600,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"BQ_PLATO\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":10,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0,\"responseTruncationSizeInBytes\":99000000},\"BQ_PLATO_EUCLID\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":10,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0,\"responseTruncationSizeInBytes\":99000000},\"BQ_BATCH_HDFS\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":3600,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"BIG_QUERY_STORAGE_DEFAULT\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":3600,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"BQ_BATCH_P0\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":3600,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"BQ_BATCH_DEFAULT\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":3600,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"BQ_BATCH_CRITICAL\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":1440000,\"refreshIntervalInSec\":3600,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"HDFS_DEFAULT\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":86400000,\"refreshIntervalInSec\":86400,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"HDFS_GCP\":{\"delayInLockAndExecuteInMs\":500,\"queryTimeoutInMs\":86400000,\"refreshIntervalInSec\":86400,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":172800,\"defaultResultErrorCacheTtlInSec\":1800,\"resultErrorCacheTtlInSecForException\":{\"java.lang.Exception\": 20},\"brv2TrafficFactor\": 1.0},\"BQ_REALTIME_DEFAULT\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":120,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 60, \"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0},\"BQ_REALTIME_P0\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":28,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 60, \"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0},\"BQ_REALTIME_CRITICAL\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":28,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 60, \"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0},\"BQ_REALTIME_P1\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":120,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 60, \"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0},\"BQ_REALTIME_APPEND_ONLY\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":60,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 60, \"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0},\"FStream_DEFAULT\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":90,\"errorRefreshIntervalInSec\":300,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":2,\"resultErrorCacheTtlInSecForException\":{},\"attemptInfoTtlInSecForClientSideException\": 60,\"brv2TrafficFactor\": 1.0},\"Druid_DEFAULT\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":300,\"errorRefreshIntervalInSec\":600,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":1,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 600,\"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0},\"Druid_P0\":{\"delayInLockAndExecuteInMs\":10000,\"queryTimeoutInMs\":60000,\"refreshIntervalInSec\":30,\"errorRefreshIntervalInSec\":300,\"d42MaxSizeInMB\":5120,\"resultCacheTtlInSec\":86400,\"defaultResultErrorCacheTtlInSec\":300,\"retryOnExceptionBackoffInMillis\":2000,\"numOfRetryOnException\":1,\"resultErrorCacheTtlInSecForException\":{}, \"attemptInfoTtlInSecForClientSideException\": 120,\"responseTruncationSizeInBytes\":17825792,\"brv2TrafficFactor\": 1.0}}",
+        "SchedulerDbConnectionProvider.enable": "true",
+        "superbi.fStreamClient": "{\"basePath\":\"http://10.47.7.195\",\"port\":80,\"maxConnectionsTotal\": 100, \"maxConnectionPerHost\": 100, \"requestTimeoutInMillies\": 15000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"maxThreads\":100,\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100}}",
+        "db.hydra.minConnectionsPerPartition": 3,
+        "auth.enable": "true",
+        "db.hydra.acquireRetryAttempts": 3,
+        "superbi.d42MetaConfig": "{\"d42ExpiryInSeconds\":604800,\"d42UploadClients\":[\"subscription\",\"download\"],\"maxSizePerChunk\":20971520,\"maxRowSize\":1000000}",
+        "superbi.org.quartz.jobStore.class": "org.quartz.impl.jdbcjobstore.JobStoreTX",
+        "audit.jdbc.password": "${AUDIT_JDBC_PASSWORD}",
+        "db.hydra.jndiName": "\"${HYDRA_DB_JNDINAME}\"",
+        "superbi.dataSource.Druid_DEFAULT": "{\"storeIdentifier\":\"Druid_DEFAULT\",\"dslConfig\":{\"enableValidations\":\"true\"},\"attributes\":{\"queryTimeOutMs\":\"300000\",\"port\":\"8888\",\"isCacheEnabled\":\"false\",\"defaultTTLInSec\":\"5\",\"host\":\"http://10.35.164.252\",\"clientSideExceptions\":\"[\\\"org.apache.calcite.tools.ValidationException\\\",\\\"org.apache.calcite.sql.parser.SqlParseException\\\"]\",\"cachePollingTimeMs\":\"1000\",\"circuitBreakerProperties\":\"{  \\\"failureRateThreshold\\\":99,\\\"minimumNumberOfCalls\\\":100,\\\"maxConcurrentCalls\\\": 50}, \\\"sourceType\\\":\\\"DRUID\\\"}\"}, \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 50,\"permittedNumberOfCallsInHalfOpenState\":5}, \"sourceType\":\"DRUID\", \"enableValidations\":\"true\"}",
+        "cosmos.database.maxPoolSize": 15,
+        "org.quartz.jobStore.misfireThreshold": 60000,
+        "org.quartz.threadPool.class": "org.quartz.simpl.SimpleThreadPool",
+        "cosmos_write.database.jdbcUrl": "\"jdbc:mysql://10.119.212.223/cosmos\"",
+        "cosmos.database.maxConnectionsPerPartition": 25,
+        "auth.contextName": "hydra",
+        "superbi.dataSource.BQ_BATCH_CRITICAL": "{\"storeIdentifier\": \"BQ_BATCH_CRITICAL\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_BATCH_CRITICAL_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-vertica-bq\",\"sourceDatasetName\":\"bigfoot_external_neo\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "data_store.name": "\"${DATA_STORE_NAME}\"",
+        "data_store.password": "\"${DATA_STORE_PASSWORD}\"",
+        "frontend.js.concat_min": "false",
+        "org.quartz.jobStore.driverDelegateClass": "org.quartz.impl.jdbcjobstore.StdJDBCDelegate",
+        "superbi.dataSource.HDFS_GCP": "{\"storeIdentifier\": \"HDFS_GCP\",\"attributes\": {\"jdbcUrl\":\"jdbc:hive2://prod-fdp-galaxy-surya-zkjn-0001:2181,prod-fdp-galaxy-surya-zkjn-0002:2181,prod-fdp-galaxy-surya-zkjn-0003:2181,prod-fdp-galaxy-surya-zkjn-0004:2181,prod-fdp-galaxy-surya-zkjn-0005:2181/bigfoot_external_neo;transportMode=http;httpPath=cliservice;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=prod-fdp-hive-astra-agni?hive.execution.engine=tez;hive.metastore.client.socket.timeout=180;hive.server.tcp.keepalive=true;hive.server.read.socket.timeout=300;job.initiator.name=SUPERBI\",\"username\":\"${SUPERBI_DATASOURCE_HDFS_GCP_USERNAME}\",\"password\":${SUPERBI_DATASOURCE_HDFS_GCP_PASSWORD},\"queue\":\"superbi\",\"priorityClient\":\"subscription\",\"recoveryTimeOutLimitMs\":\"43200000\",\"initScripts\":\"[\\\"ADD JAR hdfs:\\/\\/\\/user\\/fk-fdp-query\\/aux_jar\\/hive-udfs-1.0-SNAPSHOT.jar\\\",\\\"ADD JAR \\/usr\\/share\\/fk-bigfoot-hivejsonserde\\/json-serde-1.3-SNAPSHOT-jar-with-dependencies.jar\\\",\\\"ADD JAR \\/usr\\/share\\/fk-bigfoot-dimlookup\\/dimlookup-hive-udf-1.0-SNAPSHOT-jar-with-dependencies.jar\\\",\\\"CREATE TEMPORARY FUNCTION lookup as 'com.flipkart.bigfoot.dimlookup.udf.HiveLookupUDF'\\\",\\\"CREATE TEMPORARY FUNCTION arrToString as 'com.flipkart.fdp.CustomCaster'\\\",\\\"CREATE TEMPORARY FUNCTION lookupkey as 'com.flipkart.bigfoot.dimlookup.udf.HiveKeyGeneratorUDF'\\\",\\\"CREATE TEMPORARY FUNCTION lookup_date as 'com.flipkart.bigfoot.dimlookup.udf.DateLookupUDF'\\\",\\\"CREATE TEMPORARY FUNCTION lookup_time as 'com.flipkart.bigfoot.dimlookup.udf.TimeLookupUDF'\\\",\\\"CREATE TEMPORARY FUNCTION aggregate_filter as 'com.flipkart.bigfoot.dimlookup.udf.AggregateConditionUDF'\\\",\\\"CREATE TEMPORARY FUNCTION aggregate as 'com.flipkart.bigfoot.dimlookup.udf.AggregateUDF'\\\",\\\"CREATE TEMPORARY FUNCTION ISOToSqlTs as 'com.flipkart.bigfoot.dimlookup.udf.DateISOToSqlUDF'\\\",\\\"CREATE TEMPORARY FUNCTION business_date_diff as 'com.flipkart.bigfoot.dimlookup.udf.BusinessDayDiffUDF'\\\",\\\"set hive.merge.mapfiles=true\\\",\\\"set hive.merge.mapredfiles=true\\\",\\\"set mapreduce.input.fileinputformat.input.dir.recursive=true\\\",\\\"set mapred.max.split.size=1073741824\\\",\\\"set mapred.min.split.size=1073741824\\\",\\\"set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat\\\",\\\"set hive.merge.tezfiles=true\\\",\\\"set hive.merge.smallfiles.avgsize= 560000000\\\",\\\"set hive.strict.checks.cartesian.product=false\\\",\\\"set hive.merge.size.per.task= 560000000\\\",\\\"set mapred.job.queue.name=query\\\",\\\"set hive.optimize.index.filter=true\\\",\\\"set mapreduce.map.memory.mb=3072\\\",\\\"set mapreduce.map.java.opts=-Xmx2456m\\\",\\\"set mapreduce.reduce.memory.mb=3072\\\",\\\"set mapreduce.reduce.java.opts=-Xmx2456m\\\",\\\"set mapreduce.job.running.map.limit=10000\\\",\\\"set tez.queue.name=query\\\",\\\"set hive.tez.container.size= 3072\\\",\\\"set tez.am.mode.session=false\\\",\\\"set tez.am.container.idle.release-timeout-max.millis=5000\\\",\\\"set tez.am.container.idle.release-timeout-min.millis=2000\\\",\\\"set hive.cbo.enable=false\\\"]\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":5,\"maxConcurrentCalls\": 50,\"permittedNumberOfCallsInHalfOpenState\":5},\"sourceType\": \"HDFS\",\"limit\":-1}",
+        "superbi.dataSource.BQ_PLATO": "{\"storeIdentifier\": \"BQ_PLATO\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH_V2\"},\"attributes\": {\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"bqext_bigfoot_external_neo\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "superbi.dataSource.BQ_PLATO_EUCLID": "{\"storeIdentifier\": \"BQ_PLATO_EUCLID\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH_V2\"},\"attributes\": {\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"bqext_bigfoot_external_neo\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":5,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "cosmos_read.database.acquireIncrement": 10,
+        "audit.database.acquireRetryDelay": "\"5\"",
+        "d42.projectId": "\"fks-ssi-gcs\"",
+        "superbi.subscription.oorFlagFilePath": "/var/lib/flipkart/fdp-superbi-subscription/server/remove-this-file-to-bbr",
+        "haproxy.enable": "false",
+        "cosmos.database.jdbcUrl": "\"jdbc:mysql://10.119.212.223/cosmos\"",
+        "org.quartz.scheduler.skipUpdateCheck": true,
+        "superbi.druidClient": "{\"basePath\":\"http://10.47.102.119\",\"port\":80,\"maxConnectionsTotal\": 100, \"maxConnectionPerHost\": 100, \"requestTimeoutInMillies\": 10000,\"pooledConnectionIdleTimeout\":100,\"connectTimeout\":500,\"maxThreads\":100,\"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 100},\"clientSideExceptions\":[\"org.apache.calcite.tools.ValidationException\",\"org.apache.calcite.sql.parser.SqlParseException\"]}",
+        "superbi.dataSource.Target_DEFAULT": "{\"storeIdentifier\": \"Target_DEFAULT\",\"attributes\": {\"queryTimeOutMs\": \"2720000\",\"User\": \"${TARGET_DEFAULT_USER}\",\"isCacheEnabled\": \"true\",\"postProcessingTTLInSec\": \"15\",\"max_threads\": \"200\",\"jdbcUrl\": \"jdbc:vertica://10.34.18.23/bigfoot\",\"BackupServerNode\": \"10.34.122.1,10.34.141.242,10.34.177.227,10.34.214.183,10.34.219.111,10.34.226.188,10.34.66.23,10.34.253.95,10.34.29.99,10.33.102.162\",\"max_active_connections\": \"75\",\"ConnectionLoadBalance\": \"true\",\"usePlaceholder\": \"true\",\"failedQueryTTLInSec\": \"1800\",\"Password\": \"${TARGET_DEFAULT_PASSWORD}\"},    \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 50,\"permittedNumberOfCallsInHalfOpenState\":5},\"sourceType\": \"VERTICA\",\"limit\":-1}",
+        "scheduler.superbi.quartz.properties": "\"/usr/share/fdp-hydra/conf/superbi.quartz.properties\"",
+        "sfproxyprod.url": "\"http://172.20.76.71:8080/sfauth/spring-ws/authproxy\"",
+        "audit.file.queueSize": 200,
+        "SuccessFactor.enable": "true",
+        "db.gringotts.acquireRetryAttempts": 3,
+        "superbi.org.quartz.dataSource.quartzDataSourceSuperbi.user": "${QUARTZ_DATASOURCE_SUPERBI_USER}",
+        "cosmos_read.database.maxConnectionsPerPartition": 25,
+        "superbi.dataSource.Druid_P0": "{\"storeIdentifier\":\"Druid_P0\",\"dslConfig\":{\"enableValidations\":\"true\"},\"attributes\":{\"queryTimeOutMs\":\"300000\",\"port\":\"8888\",\"isCacheEnabled\":\"false\",\"enableValidations\":\"true\",\"defaultTTLInSec\":\"5\",\"host\":\"http://10.35.164.252\",\"clientSideExceptions\":\"[\\\"org.apache.calcite.tools.ValidationException\\\",\\\"org.apache.calcite.sql.parser.SqlParseException\\\"]\",\"cachePollingTimeMs\":\"1000\",\"circuitBreakerProperties\":\"{  \\\"failureRateThreshold\\\":99,\\\"minimumNumberOfCalls\\\":100,\\\"maxConcurrentCalls\\\": 50}, \\\"sourceType\\\":\\\"DRUID\\\"}\"}, \"circuitBreakerProperties\":{  \"failureRateThreshold\":99,\"minimumNumberOfCalls\":100,\"maxConcurrentCalls\": 50,\"permittedNumberOfCallsInHalfOpenState\":5}, \"sourceType\":\"DRUID\"}",
+        "superbi.topicToInfraConfigRefMap": "{\"BQ_BATCH_DEFAULT-default\":\"infraref-1\",\"BQ_BATCH_DEFAULT-retry\":\"infraref-1\",\"BQ_BATCH_P1-default\":\"infraref-1\",\"BQ_PLATO-default\":\"infraref-1\",\"BQ_PLATO_EUCLID-default\":\"infraref-1\",\"BQ_BATCH_P1-retry\":\"infraref-1\",\"BQ_PLATO-retry\":\"infraref-1\",\"BQ_PLATO_EUCLID-retry\":\"infraref-1\",\"BQ_REALTIME_P1-default\":\"infraref-1\",\"BQ_REALTIME_P1-retry\":\"infraref-1\",\"BQ_BATCH_HDFS-default\":\"infraref-1\",\"BQ_BATCH_HDFS-retry\":\"infraref-1\",\"BIG_QUERY_STORAGE_DEFAULT-default\":\"infraref-1\",\"BIG_QUERY_STORAGE_DEFAULT-retry\":\"infraref-1\",\"HDFS_DEFAULT-default\":\"infraref-1\",\"HDFS_DEFAULT-retry\":\"infraref-1\",\"Druid_DEFAULT-default\":\"infraref-1\",\"Druid_DEFAULT-retry\":\"infraref-1\"}",
+        "EMailer.enable": "true",
+        "audit.jdbc.maxThreads": 100,
+        "superbi.dataSources": "[\"ElasticSearch2_DEFAULT\",\"FStream_DEFAULT\",\"ElasticSearch2_P0\",\"ElasticSearch2_P1\",\"HDFS_DEFAULT\",\"HDFS_GCP\", \"Target_DEFAULT\",\"Druid_DEFAULT\",\"Druid_P0\",\"BQ_REALTIME_DEFAULT\",\"BQ_REALTIME_P0\",\"BQ_REALTIME_P1\",\"BQ_BATCH_DEFAULT\",\"BQ_BATCH_P0\",\"BQ_BATCH_P1\",\"BQ_PLATO\",\"BQ_PLATO_EUCLID\",\"BQ_BATCH_HDFS\", \"BIG_QUERY_STORAGE_DEFAULT\"]",
+        "db.hydra_schedules.maxActive": 1,
+        "superbi.table_name.enrich.store_identifiers": "{\"BATCH_OVERRIDE\": [\"BQ_BATCH_P1\"],\"TARGET_FACT_OVERRIDE\": [\"BQ_BATCH_DEFAULT\"],\"REALTIME_OVERRIDE\": [\"BQ_REALTIME_P1\"],\"BATCH_HDFS_OVERRIDE\": [\"BQ_BATCH_HDFS\"],\"BATCH_SUPPORTED_STORE_IDENTIFIER\": [\"BQ_BATCH_DEFAULT\",\"BQ_BATCH_CRITICAL\",\"BQ_BATCH_P0\",\"BQ_BATCH_P1\",\"BQ_BATCH_HDFS\", \"BIG_QUERY_STORAGE_DEFAULT\"],\"REALTIME_SUPPORTED_STORE_IDENTIFIER\": [\"BQ_REALTIME_DEFAULT\",\"BQ_REALTIME_CRITICAL\",\"BQ_REALTIME_P0\",\"BQ_REALTIME_P1\",\"BQ_REALTIME_APPEND_ONLY\"]}",
+        "brv2.oorFlagFilePath": "/var/lib/flipkart/fdp-superbi-brv2/server/remove-this-file-to-bbr",
+        "AUTHN.CALLBACK_URL": "\"http://fdp.fkinternal.com/callback\"",
+        "superbi.dataSource.BQ_BATCH_HDFS": "{\"storeIdentifier\": \"BQ_BATCH_HDFS\",\"dslConfig\":{\"BQ_USAGE_TYPE\": \"BQ_BATCH_V2\"},\"attributes\": {\"clientEmail\": \"clientEmail\",\"pKey\":\"${SUPERBI_DATASOURCE_BQ_BATCH_HDFS_P_KEY}\",\"projectId\":\"fk-sanbox-fdp-temp-1\",\"totalTimeoutLimitMs\":\"60000\",\"legacySql\":\"false\",\"sourceProjectId\":\"fks-ssi-bigquery\",\"sourceDatasetName\":\"bqext_bigfoot_external_neo\"},\"circuitBreakerProperties\":{  \"failureRateThreshold\":100,\"minimumNumberOfCalls\":1,\"maxConcurrentCalls\": 100,\"permittedNumberOfCallsInHalfOpenState\":1,\"automaticTransitionFromOpenToHalfOpenEnabled\":true},\"sourceType\": \"BIG_QUERY\",\"limit\":-1}",
+        "org.quartz.threadPool.threadCount": 1,
+        "superbi.org.quartz.dataSource.quartzDataSourceSuperbi.password": "${QUARTZ_DATASOURCE_SUPERBI_PASSWORD}",
+        "application.langs": "\"en\"",
+        "application.secret": "\"${APPLICATION_SECRET}\"",
+        "cosmos_write.database.minConnectionsPerPartition": 10,
+        "org.quartz.jobStore.dataSource": "quartzDataSource",
+        "superbi.org.quartz.threadPool.threadPriority": 5,
+        "superbi.org.quartz.jobStore.dataSource": "quartzDataSourceSuperbi",
+        "org.quartz.scheduler.instanceId": "AUTO",
+        "cosmos_read.database.maxPoolSize": 200,
+        "db.hydra.url": "\"jdbc:mysql://10.119.212.223/hydra_new\"",
+        "superbi.concurrencyForScriptEngine": 15000,
+        "cosmos.database.acquireRetryAttempts": 3,
+        "mail.server.host": "\"10.47.255.15\"",
+        "mail.admins": "true",
+        "audit.database.connectionTimeout": "\"5\"",
+        "lock_store.name": "\"${LOCK_STORE_NAME}\"",
+        "cosmos.database.acquireRetryDelay": "\"5\"",
+        "org.quartz.dataSource.quartzDataSource.maxConnections": 30,
+        "db.hydra_schedules.driver": "com.mysql.jdbc.Driver",
+        "org.quartz.jobStore.class": "org.quartz.impl.jdbcjobstore.JobStoreTX",
+        "db.hydra_read.driver": "com.mysql.jdbc.Driver",
+        "db.hydra.maxPoolSize": 100,
+        "proxyServer.url": "\"http://fdp.fkinternal.com/\"",
+        "proxyServer.clientSecret": "\"${PROXYSERVER_CLIENT_SECRET}\"",
+        "proxyServer.clientId": "\"${PROXYSERVER_CLIENT_ID}\"",
+        "QaasDownloader.downloadEndPoint": "\"http://fdp.fkinternal.com/query/result/\"",
+        "QaasDownloader.clientSecret": "\"${QAAS_DOWNLOADER_CLIENT_SECRET}\"",
+        "QaasDownloader.blockingTimeOut": 2,
+        "QaasDownloader.allowedConfigVersion": 2,
+        "QaasDownloader.host": "\"http://10.47.3.157\"",
+        "QaasDownloader.connectTimeout": 2000000,
+        "QaasDownloader.enable": "true",
+        "QaasDownloader.readTimeout": 200000,
+        "QaasDownloader.username": "${QAAS_DOWNLOADER_USERNAME}",
+        "QaasDownloader.clientID": "\"${QAAS_DOWNLOADER_CLIENT_ID}\"",
+        "heavyDashboardRefresh.time": 3600000,
+        "hydra_read.database.hibernateShowSql": "false",
+        "dashboard.switchTabInterval": 300000,
+        "dataquality.url": "\"http://10.47.1.145/\"",
+        "auth.persistenceUnit": "\"PROD_DEFAULT_PU\"",
+        "cas.enable": "false",
+        "cas.store.distributed": "true",
+        "CASCLIENTLOGOUT.URL": "\"https://flo-rubycas-server.nm.flipkart.com/logout\"",
+        "CASCALLBACK.URL": "\"http://bigfoot.nm.flipkart.com/callback\"",
+        "CASCLIENTAUTH.URL": "\"https://flo-rubycas-server.nm.flipkart.com/login\"",
+        "Camus.enable": "true",
+        "Camus.timeout": 60000,
+        "Camus.url": "\"http://10.33.1.74:7070\"",
+        "data.store.distributed": "true",
+        "dart.port": 28223,
+        "dart.host": "\"10.47.2.122\"",
+        "preparation.readOnly": "false",
+        "components.yamlPath": "\"/etc/fdp-hydra/component-definitions\"",
+        "application.global": "\"com.flipkart.hydra.global.BigfootReportGlobalSettings\"",
+        "test": "foobar",
+        "isProduction": false,
+        "jpa.default": "\"bigfoot-jndi-mysql-prod\"",
+        "jpa.bigfoot": "\"bigfoot-jndi-mysql-prod\"",
+        "Cosmos.enable": "true",
+        "logger.play": "INFO",
+        "reporting.prefix": "\"fdp-hydra\"",
+        "parsers.text.maxLength": "10M",
+        "GraphiteService.enable": "true",
+        "graphite.serverPort": 2003,
+        "graphite.serverUrl": "\"ops-statsd2.nm.flipkart.com\"",
+        "graphite.enable": "true",
+        "dataurl.hydra": "\"/data\"",
+        "azkaban.url": "\"https://10.33.197.205:8443/\""
+      }
