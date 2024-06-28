@@ -1,0 +1,283 @@
+# Default values for service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 9
+
+imageRef: fdp-superbi-brv2
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  fdp-superbi-brv2:
+    registry: container-registry.alm.fkcloud.in
+    repository: fdp-ssi/fdp-superbi-brv2
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "superbi-brv2-ci"
+
+pdb:
+  create: false
+  minAvailable: 25%
+
+podAnnotations:
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-brv2/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-brv2/server.yaml
+    name: app-config
+    subPath: server.yaml
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 914299
+
+service:
+  type: LoadBalancer
+  port: 21212
+  targetport: 21212
+
+ports:
+  - name: admin-port
+    containerPort: 21218
+    protocol: TCP
+  - name: service-port
+    containerPort: 21212
+
+livenessProbe:
+  tcpSocket:
+    port: admin-port
+  initialDelaySeconds: 180
+  periodSeconds: 10
+  failureThreshold: 5
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: service-port
+  initialDelaySeconds: 180
+  periodSeconds: 10
+  failureThreshold: 3
+
+lifecycle:
+  preStop:
+    exec:
+      command: [
+          "sh", "-c", "sleep 10 "
+      ]
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms14g -Xmx14g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: prod-fdp-brv2
+  - name: CRYPTEX_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: cryptex
+        key: client_id
+  - name: CRYPTEX_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: cryptex
+        key: client_secret
+  - name: CRYPTEX_AUTHN_URL
+    value: https://authn.ch.flipkart.com
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /var/secrets/google/wif-config.json
+
+resources:
+  limits:
+    cpu: 7
+    memory: 30Gi
+  requests:
+    cpu: 7
+    memory: 30Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 5
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 65
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+secrets:
+  cryptex:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6QXBJcThZTkN0SkVvSytFUUZhejZ2WUp5Y0FOSnJWQ21SMERpcE81TkZUMGZIVDVpTVFhU0lsWT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnByb2QifQ==
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6M0F2STJQNWt3U3VzNGNDMkN4Qk5MYmJNK1NGNkI1eGVIcjZwdjNKOFltM21uWnRCT3BaVm03NjMzRnpQajkrSm9tVnVia3dhbnlUajRYSFJxa2czUE9tejdZTndXM01TdmlWSzhnPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnByb2QifQ==
+
+configs:
+  mtl-config:
+    cosmos-jmx.json: |
+      {
+          "servers": [
+            {
+              "port": "21214",
+              "host": "localhost",
+              "process": "service",
+              "customTags": "env=prod",
+              "queries": [
+                {
+                  "obj": "java.lang:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "metrics:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "java.nio:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-coordinator-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-fetch-manager-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.producer:type=producer-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.producer:type=producer-topic-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "com.netflix.servo:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "org.apache.commons.pool2:*",
+                  "saperator": "."
+                }
+              ],
+              "numQueryThreads": 2
+            }
+          ]
+        }
+    cosmos-tail.yml: |
+      application: "prod"
+      file: "/var/log/access-logs/access.log"
+      requestLinePosition: 5
+      statusCodePosition: 6
+      sizePosition: 7
+      responseTimePosition: 10
+      multiplier: 1
+      role: "app"
+      ignoreUrls: /health,/ping
+
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "DEBUG"
+        loggers:
+          io.dropwizard: "DEBUG"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.brv2.logger.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-brv2/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-brv2/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-brv2/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-brv2/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.brv2.resource"
+
+      environmentConfig:
+        env: prod
+
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-brv2/server/remove-this-file-to-bbr
+
+    config.json: |
+      {
+      }

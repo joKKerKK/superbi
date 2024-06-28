@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "service.fullname" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "service.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes: {{- toYaml .Values.podVolumes | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30}}
+      containers:
+        {{- range $name, $container := .Values.sidecars }}
+        - name: {{ $name }}
+          securityContext:
+            {{- toYaml $container.securityContext | nindent 12 }}
+          {{- with $image := (index $.Values.image $container.imageRef) }}
+          image: "{{ $image.registry }}/{{ $image.repository }}:{{ $image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
+          {{- end }}
+          env:
+            {{- toYaml $container.env | nindent 12 }}
+          ports:
+            {{- toYaml $container.ports | nindent 12 }}
+          livenessProbe:
+            {{- toYaml $container.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml $container.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml $container.startupProbe | nindent 12 }}
+          lifecycle:
+            {{- toYaml $container.lifecycle | nindent 12 }}
+          resources:
+            {{- toYaml $container.resources | nindent 12 }}
+          volumeMounts:
+            {{- toYaml $container.volumeMounts | nindent 12 }}
+        {{- end }}
+
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with $image := (index .Values.image .Values.imageRef) }}
+          image: "{{ $image.registry }}/{{ $image.repository }}:{{ $image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
+          {{- end }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          ports:
+            {{- toYaml .Values.ports | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- toYaml .Values.volumeMounts | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

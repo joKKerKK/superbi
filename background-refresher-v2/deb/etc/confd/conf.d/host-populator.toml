@@ -1,0 +1,12 @@
+
+[template]
+
+prefix = "/___CONFIG_SERVICE_BUCKET___"
+
+src = "host-populator.yml.tmpl"
+
+dest = "/usr/local/fk-ops-hosts-populator/buckets/fdp-infra-hadoop-conf-bucket.conf"
+
+keys = [
+    "/superbi.hostPopulatorBucket"
+]

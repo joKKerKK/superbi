@@ -1,0 +1,50 @@
+#!/bin/bash -ex
+set -e
+
+function logmsg()
+{
+    echo "[`date`] $*"
+}
+
+check_vars()
+{
+    var_names=("$@")
+    for var_name in "${var_names[@]}"; do
+        [ -z "${!var_name}" ] && echo "Usage: $var_name is unset." && var_unset=true
+    done
+    [ -n "$var_unset" ] && exit 1
+    return 0
+}
+
+# Check if mandatory variables are set and non-empty
+check_vars PACKAGE DOCKER_DIR
+
+CURR_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+LOCAL_DIR=$CURR_DIR
+
+logmsg "Setting up Clean Docker Directory $DOCKER_DIR from $LOCAL_DIR/docker/disk"
+rm -rf $DOCKER_DIR
+cp -r $LOCAL_DIR/docker/disk $DOCKER_DIR
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # Mac OSX
+  find $DOCKER_DIR -type f -exec sed -i '' "s/__PACKAGE__/${PACKAGE}/g;" {} +
+else
+  # Assuming to be linux build system.
+  find $DOCKER_DIR -type f -exec sed -i "s/__PACKAGE__/${PACKAGE}/g;" {} +
+fi
+
+# Rename with __PACKAGE__ with package name $PACKAGE
+mv $DOCKER_DIR/usr/share/__PACKAGE__ $DOCKER_DIR/usr/share/${PACKAGE}
+mv $DOCKER_DIR/var/log/flipkart/__PACKAGE__ $DOCKER_DIR/var/log/flipkart/${PACKAGE}
+mv $DOCKER_DIR/var/lib/flipkart/__PACKAGE__ $DOCKER_DIR/var/lib/flipkart/${PACKAGE}
+
+
+. $DOCKER_DIR/usr/share/${PACKAGE}/server/commons.sh
+
+logmsg "Setting up BASE_DIR=${BASE_DIR}"
+
+# copy jar and resources
+logmsg "Copying ${PACKAGE} jars and resources"
+cp -r $LOCAL_DIR/target/background-refresher-v2.jar $DOCKER_DIR/${SERVER_DIR}/lib/${PACKAGE}.jar
+

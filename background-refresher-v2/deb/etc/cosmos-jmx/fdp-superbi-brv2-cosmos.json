@@ -1,0 +1,54 @@
+{
+  "servers": [
+    {
+      "prefix": "fdp-superbi-brv2",
+      "port": "21214",
+      "host": "___HOST___",
+      "process": "fdp-superbi-brv2-service",
+      "customTags": "env=___ENV___",
+      "queries": [
+        {
+          "obj": "java.lang:*",
+          "saperator": "."
+        },
+        {
+          "obj": "metrics:*",
+          "saperator": "."
+        },
+        {
+          "obj": "java.nio:*",
+          "saperator": "."
+        },
+        {
+          "obj": "kafka.consumer:type=consumer-coordinator-metrics,*",
+          "saperator": "."
+        },
+        {
+          "obj": "kafka.consumer:type=consumer-fetch-manager-metrics,*",
+          "saperator": "."
+        },
+        {
+          "obj": "kafka.consumer:type=consumer-metrics,*",
+          "saperator": "."
+        },
+        {
+          "obj": "kafka.producer:type=producer-metrics,*",
+          "saperator": "."
+        },
+        {
+          "obj": "kafka.producer:type=producer-topic-metrics,*",
+          "saperator": "."
+        },
+        {
+          "obj": "com.netflix.servo:*",
+          "saperator": "."
+        },
+        {
+          "obj": "org.apache.commons.pool2:*",
+          "saperator": "."
+        }
+      ],
+      "numQueryThreads": 2
+    }
+  ]
+}

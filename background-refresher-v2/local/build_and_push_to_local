@@ -1,0 +1,80 @@
+#!/bin/bash -ex
+set -o errexit
+
+function logmsg()
+{
+    echo "[`date`] $*"
+}
+
+export -f logmsg
+
+CURR_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+LOCAL_DIR=$CURR_DIR/..
+
+export PACKAGE="fdp-superbi-brv2"
+
+SERVICE_NAME=`cat ${LOCAL_DIR}/k8s/helm-chart/service/Chart.yaml | grep name: | awk '/name/ {print $2}'`
+
+#APP_VERSION=`helm show chart ${LOCAL_DIR}/k8s/helm-chart/${SERVICE_NAME} | awk '/appVersion/ {print $2}'`
+APP_VERSION=`cat ${LOCAL_DIR}/k8s/helm-chart/service/Chart.yaml | grep appVersion: | awk '/appVersion/ {gsub(/"/, "", $2); print  $2}'`
+
+# Use APP_VERSION from Helm Chart
+export VERSION=${VERSION:=$APP_VERSION}
+export DOCKER_DIR="$LOCAL_DIR/gen-$PACKAGE-$VERSION"
+
+#Build and package jar
+#bash $LOCAL_DIR/build.sh
+#
+bash $LOCAL_DIR/prepare_docker_dir
+
+DOCKER_REGISTRY=localhost:5000
+DOCKERFILE_NAME="docker/Dockerfile"
+IMAGE_NAME=$PACKAGE
+IMAGE_TAG=$VERSION
+
+echo "Building docker image"
+cd ${DOCKER_DIR}
+DOCKERFILE_NAME=${LOCAL_DIR}/${DOCKERFILE_NAME}
+
+
+echo $DOCKER_HOST; until docker ps; do sleep 3; done;
+DOCKER_CMD="docker build --file ${DOCKERFILE_NAME}"
+
+BUILD_ARGS=[]
+mapSize=`echo $BUILD_ARGS | jq length`
+count=0
+
+while [ $count -lt $mapSize ];
+do
+    key=`echo $BUILD_ARGS | jq -c '.['$count']|[.key]'`
+    value=`echo $BUILD_ARGS | jq -c '.['$count']|[.value]'`
+    DOCKER_CMD="${DOCKER_CMD} --build-arg ${key}=${value} "
+    count=$((count+1))
+done
+
+ADD_HOSTS=[]
+mapSize=`echo $ADD_HOSTS | jq length`
+count=0
+while [ $count -lt $mapSize ];
+do
+    key=`echo $ADD_HOSTS | jq -c '.['$count']|[.key]'`
+    value=`echo $ADD_HOSTS | jq -c '.['$count']|[.value]'`
+    DOCKER_CMD="${DOCKER_CMD} --add-host ${key}:${value}"
+    count=$((count+1))
+done
+
+if [ ! $DOCKER_BUILD_TARGET = "NO_TARGET" ]; then
+  TARGET_CMD="--target ${DOCKER_BUILD_TARGET}"
+fi
+
+DOCKER_CMD="${DOCKER_CMD} ${TARGET_CMD} --tag ${IMAGE_NAME}:${IMAGE_TAG} ."
+DOCKER_CMD=$(echo $DOCKER_CMD | sed 's/[["]//g' | sed 's/[]]//g')
+echo $DOCKER_CMD
+$DOCKER_CMD
+
+TagUrlCmd=$DOCKER_REGISTRY/fdp-ssi/${IMAGE_NAME}:${IMAGE_TAG}
+docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${TagUrlCmd}  && docker push $TagUrlCmd;
+
+#cleaning up docker directory
+logmsg "Removing Docker Directory $DOCKER_DIR"
+rm -rf $DOCKER_DIR

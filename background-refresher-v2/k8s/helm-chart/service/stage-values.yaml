@@ -1,0 +1,192 @@
+# Default values for service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+serviceAccount:
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "stage-fdp-superbi-brv2-ci"
+
+serviceAnnotations:
+  fcp/app-id: stage-fdp-brv2
+  elb.fcp/name: stage-fdp-brv2
+  elb.fcp/backend-service: stage-fdp-brv2
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms14g -Xmx14g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: iaas
+  - name: CONFIG_BUCKET
+    value: stage-fdp-brv2
+  - name: CRYPTEX_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: cryptex
+        key: client_id
+  - name: CRYPTEX_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: cryptex
+        key: client_secret
+  - name: CRYPTEX_AUTHN_URL
+    value: https://authn.ch.flipkart.com
+
+resources:
+  limits:
+    cpu: 3
+    memory: 20Gi
+  requests:
+    cpu: 3
+    memory: 20Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 65
+  # targetMemoryUtilizationPercentage: 80
+
+secrets:
+  cryptex:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6SVZLZkVQeVNCaVA0REkxMHByczV2UDBIRHNPL2RNSzlYai9DNGFVMW9tNXJERjZlYUxwZ051cVEiLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6OWpyNU9QL3I1RmhPMmRJeWJjUm9LNG5BUDhjOEp2OUlpWjBsN2ZjR0pydjB3UnNiN0U4Qm82bkpCVkZkTWJJZnVjMVNCdU5LOVE3N1hyNUZvQmlKV3lZZE9jOHJJcHYvRGpyVnN3PT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+
+configs:
+  mtl-config:
+    cosmos-jmx.json: |
+      {
+          "servers": [
+            {
+              "port": "21214",
+              "host": "localhost",
+              "process": "service",
+              "customTags": "env=stage",
+              "queries": [
+                {
+                  "obj": "java.lang:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "metrics:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "java.nio:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-coordinator-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-fetch-manager-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.producer:type=producer-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.producer:type=producer-topic-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "com.netflix.servo:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "org.apache.commons.pool2:*",
+                  "saperator": "."
+                }
+              ],
+              "numQueryThreads": 2
+            }
+          ]
+        }
+    cosmos-tail.yml: |
+      application: "stage"
+      file: "/var/log/access-logs/access.log"
+      requestLinePosition: 5
+      statusCodePosition: 6
+      sizePosition: 7
+      responseTimePosition: 10
+      multiplier: 1
+      role: "app"
+      ignoreUrls: /health,/ping
+
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.brv2.logger.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-brv2/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-brv2/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-brv2/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-brv2/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.brv2.resource"
+
+      environmentConfig:
+        env: stage
+
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-brv2/server/remove-this-file-to-bbr
+
+    config.json: |
+      {
+      }

@@ -1,0 +1,257 @@
+
+replicaCount: 1
+
+serviceAccount:
+  name: "fdp-superbi-brv2-preprod-ci"
+
+serviceFullname: brv2
+
+podAnnotations:
+  fcp.k8s.mtl/mtl-config-map: mtl-config
+  fcp.k8s.mtl/cosmos-jmx: disabled
+  fcp.k8s.mtl/cosmos-statsd: disabled
+  fcp.k8s.mtl/cosmos-tail: disabled
+  fcp.k8s/host-populator-config: hosts-populator-keys
+
+serviceAnnotations:
+  fcp/app-id: stage-fdp-brv2
+  elb.fcp/name: brv2.fdp-superbi-brv2-preprod.fkcloud.in
+  elb.fcp/backend-service: brv2.fdp-superbi-brv2-preprod.fkcloud.in
+  elb.fcp/frontend-port: "80"
+  elb.fcp/backend-port: "21212"
+  elb.fcp/health-check-port: "21212"
+  elb.fcp/health-check-path: /health
+  elb.fcp/health-check-timeout: 1s
+  elb.fcp/health-check-interval: 5s
+  elb.fcp/load-balancing-algorithm: "leastconn"
+  elb.fcp/do-not-delete-vip: "true"
+
+podVolumes:
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "3Gi"
+  - name: mtl-config
+    configMap:
+      name: mtl-config
+  - name: cosmos-tail-access-logs
+    emptyDir: { }
+  - name: google-cloud-key
+    secret:
+      secretName: wif-config
+
+volumeMounts:
+  - mountPath: /var/log/flipkart/fdp-superbi-brv2/
+    name: logs-dir
+  - mountPath: /var/lib/flipkart/fdp-superbi-brv2/server.yaml
+    name: app-config
+    subPath: server.yaml
+  - mountPath: /var/log/access-logs
+    name: cosmos-tail-access-logs
+  - mountPath: /var/secrets/google
+    name: google-cloud-key
+
+image:
+  mtl-sidecar:
+    registry: jfrog.fkinternal.com
+    repository: mtl/mtl-agent
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "0.4.11"
+
+resources:
+  limits:
+    cpu: 5
+    memory: 30Gi
+  requests:
+    cpu: 5
+    memory: 30Gi
+
+env:
+  - name: MEMORY_OPTS
+    value: -Xms14g -Xmx14g
+  - name: TZ
+    value: Asia/Kolkata
+  - name: INFRA
+    value: kaas
+  - name: CONFIG_BUCKET
+    value: gke-stage-fdp-brv2
+  - name: CRYPTEX_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: cryptex
+        key: client_id
+  - name: CRYPTEX_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: cryptex
+        key: client_secret
+  - name: CRYPTEX_AUTHN_URL
+    value: https://authn.ch.flipkart.com
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /var/secrets/google/wif-config.json
+
+secrets:
+  cryptex:
+    client_id: eyJkYXRhIjoidmF1bHQ6djE6Y2FzblZaRWkxa1NWTU1CdVc4TWIxcmJPQjBndWZOZTIrMThzb09DMkVIQjdEOGZoSThjYUZ3dz0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+    client_secret: eyJkYXRhIjoidmF1bHQ6djE6QWtNbUd5VGFQYmdoZE95UUIzU3lxSXQxNjN1YnovM3d0ZVZYb2QrZVVKVHVVcXlsL0RWVFlOM1hyZVJBc09UU0JRTFRSL09KalY4aE45UmtzUFc0dXhYYVhZbGdwYXlybHQ0YXVnPT0iLCJrZXlJZCI6IkZEUC1TU0lfc3VidG06OnN0YWdlIn0=
+  wif-config:
+    wif-config.json: eyJkYXRhIjoidmF1bHQ6djE6Uk1JN3haOFZ6UUMzV2Q3WjJ2V1ZYa3FVL3VVc1lDc2dPSThJRTNwR0k3TlpKOHovTWtXeFlGYXhFN2dQWklQRGI4cXUxNzdtU1IrUjMvZTRWZzlRb09BNk10Q2hlMG9RRUQxUW9KZDg2MlVaRFpRT0ZNQWsvdTBjdjNQRjBwelVZRTJWNHBXNzRSaTBBOS9TS2swR2VoVmszRmloL2Y3ZVJSdy9MV1N3RytGenFaT1FGd3RZNGJkMXlVdUltamlBWGJrSWgxOEt6Sy9EMUs2RmEvREo0R2JzckgzYkYza2U1UmFOWUZhazYwdTdHYzhjVlR3azhxR0lLamwzUHlBbCtMTVh6akorckpiWVVBS0pRaVpaVHhBdS9HSGlDUnMxZGRvN0VPQmpEZDVpMjlRSWV4Y2lTZHdtZlhXeUtXeCtnVUxlMmVmNDFmMEUyZHdhUmVXUTg2bTNmTDQzVzR0aWhrcUc1ZW8rbWJkbkFDTjZ5eWErcVJWTUFkZjFWZXRpOUErZGVrVnp0WnBEU3poVTVxUU9MWlBlNm9aQVgvMDhFTGYrNVFpcUNjTmFBb1I5bVFCTFU3a2JMYjB5SkhhWUdxbEtJbld0YUZ0K3ViUDdyNVNNRVpKYWlCMHBJMXJKTkxoWlhCV2o5azJJeTBvVzdTWjRBcC9ZazJuaElGUTM1K1RKOXJWaHVDRWdjK3RPbmVOUkRWbXUzV3Jza1Q2Y05KcVU2QnVKUTJrT2QvZEZOTFFlOHR6Y2FiYVNyMXMxcFR6amhhNTNtT1dBQVRRV0c3amFjZWNTdXpqQTl0ci83Q2d6cWZKTEhkOW9BU2xaM2RUYThhWkZiRGhXQ1ZDcmhMamdMUXZZYU9QSi9wV1U1VE1oNGNsUnplSkl3cnBkV0NjK1UrZFh3anZ3S1ZleE1qL0t0S0M2eFUxTUllWVhzVVhEVDVPOWNESkdFWlQzQlVCei8rbXh2blFmelhPWUZVVXVPbmo5K1BkNGY3L2FBVFREYWpYZjVFRlMzQUluK2N0aHErTHZBQUMrZ0xBWTIzV01nZXJhM3BpcEMyTlh2dG1YQnBlczFyWjFReko1VnY3czlIU0Uxc1pJdCt2eVdmelZZRDdhTjQvVkxzcytvU1MyQTFHSmRzeXpZREd0Qms3R1FHR0Z2ZXJzUDltelpvYW1BdWxsSjBXOGxQc1lyc3pQTG9UQ1FhZUhqcDJwNFdYRDVrMmNUVnZHTnpiUkFNcnNiM2ZiazA3dCtVT25rVDVuVkIrNXRnalVDRnR5YnJXRjY0OEt2VDg5NGlsYWJLczJSVDU5dDUyclZpNVhpOE4vdm9OdDNEWlJwQm16ZmFmcnYwa2tOVGFRalM2ZmpmNU9kanJDYkpMTXhlV0N3VUtwSGkrbDdUTEhNdEs0Sng4RGxIVk9EMkx6UmlKMWlQaW8zVHRsN0xMVHRlcm5HOXU2SmNNOUNjQ01hSWdodmdnYmR0RVQzOWJ1bEJOOVlCS1N2dUxFZ3JuR2lPSmxlMWVBT3FVRkdzSGlaVURtNXNsSzBDMmFPdHlObCt4TGFZZmZqSjBtS3VDdXJlZVc3OS9Bait2NkZHYmxnTHFrOHIyZmZxTGMzZHluakZGcUIyL1U4cUcyTFRFYiIsImtleUlkIjoiRkRQLVNTSV9zdWJ0bTo6Z2NwX3dpZl9jb25maWdfc3VwZXJiaSJ9
+
+configs:
+  hosts-populator-keys:
+    k8s-fpg-hp.conf: |-
+      prod-fdp-galaxy-hostnames
+  mtl-config:
+    cosmos-jmx.json: |
+      {
+          "servers": [
+            {
+              "port": "21214",
+              "host": "localhost",
+              "process": "service",
+              "customTags": "env=stage",
+              "queries": [
+                {
+                  "obj": "java.lang:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "metrics:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "java.nio:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-coordinator-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-fetch-manager-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.consumer:type=consumer-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.producer:type=producer-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "kafka.producer:type=producer-topic-metrics,*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "com.netflix.servo:*",
+                  "saperator": "."
+                },
+                {
+                  "obj": "org.apache.commons.pool2:*",
+                  "saperator": "."
+                }
+              ],
+              "numQueryThreads": 2
+            }
+          ]
+        }
+    cosmos-tail.yml: |
+      application: "stage"
+      file: "/var/log/access-logs/access.log"
+      requestLinePosition: 5
+      statusCodePosition: 6
+      sizePosition: 7
+      responseTimePosition: 10
+      multiplier: 1
+      role: "app"
+      ignoreUrls: /health,/ping
+  app-config:
+    server.yaml: |
+      server:
+        type: "default"
+        requestLog:
+          appenders:
+            - type: "file"
+              currentLogFilename: "/var/log/access-logs/access.log"
+              archivedLogFilenamePattern: "/var/log/access-logs/access-%i.log"
+              logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+              maxFileSize: "100MB"
+              archive: true
+              timeZone: "IST"
+              archivedFileCount: 10
+        adminMinThreads: 8
+        adminMaxThreads: 8
+        applicationConnectors:
+          - type: "http"
+            port: 21212
+            acceptorThreads: 1
+            selectorThreads: 1
+        adminConnectors:
+          - type: "http"
+            port: 21218
+            acceptorThreads: 1
+            selectorThreads: 1
+      logging:
+        level: "INFO"
+        loggers:
+          io.dropwizard: "INFO"
+          org.hibernate.sql: "WARN"
+          org.hibernate.orm.deprecation: error
+          com.flipkart.fdp.superbi.brv2.logger.AuditFileLogger:
+            additive: false
+            appenders:
+              - type: "file"
+                logFormat: "%-6level [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+                currentLogFilename: "/var/log/flipkart/fdp-superbi-brv2/audit/audit.log"
+                archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-brv2/audit/audit-%i.log"
+                archivedFileCount: 7
+                archive: true
+                timeZone: "IST"
+                maxFileSize: "10MiB"
+        appenders:
+          - type: console
+            logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          - type: "file"
+            currentLogFilename: "/var/log/flipkart/fdp-superbi-brv2/server/server.log"
+            archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-brv2/server/server-%i.log"
+            maxFileSize: "100MB"
+            archive: true
+            timeZone: "IST"
+            archivedFileCount: 10
+            logFormat: "%-6level [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+      swagger:
+        resourcePackage: "com.flipkart.fdp.superbi.brv2.resource"
+      environmentConfig:
+        env: preprod
+      healthCheckConfig:
+        oorFlagFilePath: /var/lib/flipkart/fdp-superbi-brv2/server/remove-this-file-to-bbr
+    config.json: |
+      {
+      }
+
+sidecars:
+  mtl-sidecar:
+    imageRef: mtl-sidecar
+    volumeMounts:
+      - name: mtl-config
+        mountPath: /etc/default/mtl-config/mtl-config-map
+      - name: cosmos-tail-access-logs
+        mountPath: /var/log/access-logs
+    resources:
+      limits:
+        cpu: 200m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+    env:
+      - name: COSMOS_TAIL_ENABLED
+        value: "true"
+      - name: COSMOS_STATSD_ENABLED
+        value: "false"
+      - name: COSMOS_JMX_ENABLED
+        value: "true"

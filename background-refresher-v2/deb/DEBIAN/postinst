@@ -1,0 +1,103 @@
+#!/bin/bash -e
+
+# this script should complete any required configuration after the package has been unpacked
+
+source /usr/share/fdp-superbi-brv2/server/scripts/commons.sh
+
+HOST_NAME=`hostname`
+
+if [ "$1" == "configure" ] ; then
+        # creating user if it does not exist
+        if ! getent group $GROUP > /dev/null; then
+                groupadd -g $USER_ID $GROUP
+        fi
+
+        if ! getent passwd $USER_ID > /dev/null; then
+                adduser --system --uid $USER_ID --home ${BASE_DIR} --no-create-home \
+                --ingroup $GROUP --disabled-password --shell /bin/false \
+                $USER
+        fi
+
+        mkdir -p $LOG_DIR
+        mkdir -p $WORK_DIR
+        mkdir -p $SERVER_WORK_DIR
+
+        LOG INFO "Changing ownership and permissions..."
+
+        chown -R $USER:$GROUP ${BASE_DIR}
+        chown -R $USER:$GROUP ${LOG_DIR}
+        chown -R $USER:$GROUP ${WORK_DIR}
+        chown -R $USER:$GROUP ${SERVER_WORK_DIR}
+        chown -R $USER:$GROUP ${BUCKET_FILE}
+        cp ${BUCKET_FILE} ${BUCKET_FILE_OVERRIDE}
+        chown -R $USER:$GROUP ${BUCKET_FILE_OVERRIDE}
+
+        if [ -e /etc/cron.d/$PACKAGE ]; then
+           rm -rf /etc/cron.d/$PACKAGE
+        fi
+
+        LOG INFO "Initializing service."
+        /usr/share/fk-ops-servicebuilder/servicebuilder.pl -N ${PACKAGE} -R ${SERVICE_WRAPPER_FILE}
+        sleep 3
+        ${INIT_FILE} restart
+
+        LOG INFO "Initializing nagios"
+        HEALTH=${PACKAGE}_health
+        /usr/share/fk-ops-servicebuilder/servicebuilder.pl -N ${HEALTH} -R ${HEALTH_CHECK_WRAPPER}
+        sleep 3
+        svc -u /etc/service/${HEALTH}
+
+        LOG INFO "Initializing cosmos-jmx"
+        ENV='stage'
+        BUCKET_NAME=`cat ${BUCKET_FILE} | grep -o "=.*" | cut -c2- `
+        if [[ $BUCKET_NAME == *"prod-"* ]]; then
+            ENV='prod'
+        fi
+
+        source ${BUCKET_FILE}
+
+        find /etc/cosmos-jmx/ -type f -exec sed -i "s/___HOST___/${HOST_NAME}/g" {} +
+        find /etc/cosmos-jmx/ -type f -exec sed -i "s/___ENV___/${ENV}/g" {} +
+        find /etc/cosmos-tail/ -type f -exec sed -i "s/___HOST___/${HOST_NAME}/g" {} +
+        find /etc/cosmos-tail/ -type f -exec sed -i "s/___ENV___/${ENV}/g" {} +
+        find /etc/confd/conf.d/ -type f -exec sed -i "s/___PACKAGE___/${PACKAGE}/g" {} +
+        find /etc/confd/conf.d/ -type f -exec sed -i "s/___CONFIG_SERVICE_BUCKET___/${CONFIG_SERVICE_BUCKET}/g" {} +
+
+        # sed -i 's/_CONFIG_SERVICE_BUCKET_/'"$CONFIG_SERVICE_BUCKET"'/g' /etc/confd/conf.d/*.toml
+
+        sleep 1
+        LOG INFO "Restarting cosmos-jmx"
+        sudo /etc/init.d/cosmos-jmx restart
+
+        LOG INFO "Restarting cosmos-tail"
+        sudo /etc/init.d/cosmos-tail restart
+
+        sudo /etc/init.d/cosmos-collectd restart
+
+        LOG INFO "Restarting stream-relay"
+        sudo svc -t /etc/service/stream-relay.svc
+
+        LOG INFO "Restarting rsyslog"
+        sudo /etc/init.d/rsyslog restart
+
+        LOG INFO "Refreshing host  populator"
+        sudo mv /etc/default/superbi-brv2_nsca_wrapper /etc/default/nsca_wrapper
+        find /etc/default/nsca_wrapper -type f -exec sed -i "s/___ENV___/${ENV}/g" {} +
+
+        LOG INFO "Restarting fk-config-service-confd"
+        sudo /etc/init.d/fk-config-service-confd restart
+
+        count=0
+        while [ ! -f ${CONFIG_FILE} ]
+        do
+            sleep 2
+            count=$((count+1))
+            if [[ $count -ge 10 ]]; then
+                LOG INFO "Waiting for bucket to populate."
+                break
+            fi
+        done
+
+
+fi
+exit 0

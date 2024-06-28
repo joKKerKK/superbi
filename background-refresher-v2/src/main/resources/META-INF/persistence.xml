@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
+    <persistence-unit name="hydra_read" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>com.flipkart.fdp.superbi.entities.ConsumableEntity</class>
+        <class>com.flipkart.fdp.superbi.entities.Report</class>
+        <class>com.flipkart.fdp.superbi.entities.Dashboard</class>
+        <class>com.flipkart.fdp.superbi.entities.Tag</class>
+        <class>com.flipkart.fdp.superbi.entities.User</class>
+        <class>com.flipkart.fdp.superbi.entities.ReportFederation</class>
+        <class>com.flipkart.fdp.superbi.entities.TableFederation</class>
+        <class>com.flipkart.fdp.superbi.entities.NativeExpression</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://host.docker.internal:3306/hydra_new"/>
+            <property name="javax.persistence.jdbc.user" value="remote"/>
+            <property name="javax.persistence.jdbc.password" value="remote"/>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+            <property name="hibernate.connection.autocommit" value="true"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.id.new_generator_mappings" value="false"/>
+            <property name="hibernate.current_session_context_class" value="org.hibernate.context.internal.ThreadLocalSessionContext"/>
+
+            <property name="hibernate.connection.provider_class"
+              value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"/> <!-- hibernate 4.1.9 -->
+            <property name="hibernate.c3p0.acquireIncrement" value="3"/>
+            <property name="hibernate.c3p0.maxIdleTime" value="3600"/>
+            <property name="hibernate.c3p0.minPoolSize" value="1"/>
+            <property name="hibernate.c3p0.maxPoolSize" value="6"/>
+            <property name="hibernate.c3p0.maxStatements" value="20"/>
+            <property name="hibernate.c3p0.idleConnectionTestPeriod" value="1800"/> <!-- seconds -->
+            <property name="hibernate.c3p0.maxConnectionAge" value="1000"/>
+            <property name="hibernate.c3p0.maxIdleTimeExcessConnections" value="300"/>
+            <property name="hibernate.cache.use_second_level_cache" value="true"/>
+            <property name="hibernate.cache.use_query_cache" value="true"/>
+            <property name="hibernate.cache.region.factory_class"
+              value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory"/>
+            <property name="hibernate.cache.default_cache_concurrency_strategy" value="read-only"/>
+            <property name="hibernate.javax.cache.uri" value="file:/META-INF/ehcache.xml"/>
+            <property name="hibernate.jmx.enabled" value="true"/>
+            <property name="hibernate.jmx.usePlatformServer" value="true"/>
+            <property name="hibernate.generate_statistics" value="true"/>
+
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="cosmos_read" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Fact</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Namespace</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Table</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Org</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Source</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.DegenerateDimension</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Column</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Level</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Hierarchy</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Dimension</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Measure</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.FactDimensionMapping</class>
+
+        <!--Class of cosmos-db module from MMG-->
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Fact</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Table</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Column</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.DegenerateDimension</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.FactDimensionMapping</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Measure</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Source</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Namespace</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Level</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Dimension</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Org</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Hierarchy</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.converter.SourceTypeConverter</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.converter.FederationTypeConverter</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.EntityProperty</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Job</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.DomainType</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.TableEnhancement</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.converter.SetStringConvertor</class>
+        <!--Class of cosmos-db module from MMG-->
+
+        <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
+
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://host.docker.internal:3306/cosmos"/>
+            <property name="javax.persistence.jdbc.user" value="remote"/>
+            <property name="javax.persistence.jdbc.password" value="remote"/>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+            <property name="hibernate.connection.autocommit" value="false"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.id.new_generator_mappings" value="false"/>
+            <property name="hibernate.current_session_context_class" value="org.hibernate.context.internal.ThreadLocalSessionContext"/>
+
+            <property name="hibernate.connection.provider_class"
+              value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"/> <!-- hibernate 4.1.9 -->
+            <property name="hibernate.c3p0.acquireIncrement" value="3"/>
+            <property name="hibernate.c3p0.maxIdleTime" value="3600"/>
+            <property name="hibernate.c3p0.minPoolSize" value="1"/>
+            <property name="hibernate.c3p0.maxPoolSize" value="6"/>
+            <property name="hibernate.c3p0.maxStatements" value="20"/>
+            <property name="hibernate.c3p0.idleConnectionTestPeriod" value="1800"/> <!-- seconds -->
+            <property name="hibernate.c3p0.maxConnectionAge" value="1000"/>
+            <property name="hibernate.c3p0.maxIdleTimeExcessConnections" value="300"/>
+            <property name="hibernate.cache.use_second_level_cache" value="true"/>
+            <property name="hibernate.cache.use_query_cache" value="true"/>
+            <property name="hibernate.cache.region.factory_class"
+              value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory"/>
+            <property name="hibernate.cache.default_cache_concurrency_strategy" value="read-only"/>
+            <property name="hibernate.javax.cache.uri" value="file:/META-INF/ehcache.xml"/>
+            <property name="hibernate.jmx.enabled" value="true"/>
+            <property name="hibernate.jmx.usePlatformServer" value="true"/>
+            <property name="hibernate.generate_statistics" value="true"/>
+
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="cosmos_write" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Fact</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Namespace</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Table</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Org</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Source</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.DegenerateDimension</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Column</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Level</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Hierarchy</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Dimension</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.Measure</class>
+        <class>com.flipkart.fdp.superbi.cosmos.meta.model.data.FactDimensionMapping</class>
+
+
+        <!--Class of cosmos-db module from MMG-->
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Fact</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Table</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Column</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.DegenerateDimension</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.FactDimensionMapping</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Measure</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Source</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Namespace</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Level</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Dimension</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Org</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Hierarchy</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.converter.SourceTypeConverter</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.converter.FederationTypeConverter</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.EntityProperty</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.Job</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.DomainType</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.TableEnhancement</class>
+        <class>com.flipkart.fdp.mmg.cosmos.entities.converter.SetStringConvertor</class>
+        <!--Class of cosmos-db module from MMG-->
+
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://host.docker.internal:3306/cosmos"/>
+            <property name="javax.persistence.jdbc.user" value="remote"/>
+            <property name="javax.persistence.jdbc.password" value="remote"/>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+            <property name="hibernate.connection.autocommit" value="false"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.id.new_generator_mappings" value="false"/>
+            <property name="hibernate.current_session_context_class" value="org.hibernate.context.internal.ThreadLocalSessionContext"/>
+
+            <property name="hibernate.connection.provider_class"
+              value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"/> <!-- hibernate 4.1.9 -->
+            <property name="hibernate.c3p0.acquireIncrement" value="3"/>
+            <property name="hibernate.c3p0.maxIdleTime" value="3600"/>
+            <property name="hibernate.c3p0.minPoolSize" value="1"/>
+            <property name="hibernate.c3p0.maxPoolSize" value="6"/>
+            <property name="hibernate.c3p0.maxStatements" value="20"/>
+            <property name="hibernate.c3p0.idleConnectionTestPeriod" value="1800"/> <!-- seconds -->
+            <property name="hibernate.c3p0.maxConnectionAge" value="1000"/>
+            <property name="hibernate.c3p0.maxIdleTimeExcessConnections" value="300"/>
+        </properties>
+    </persistence-unit>
+
+
+    <persistence-unit name="audit" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>com.flipkart.fdp.audit.entities.AuditInfo</class>
+        <class>com.flipkart.fdp.audit.entities.ExecutorQueryInfoLog</class>
+        <class>com.flipkart.fdp.audit.entities.QueryInfoFact</class>
+        <class>com.flipkart.fdp.audit.entities.DSQueryInfoLog</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://host.docker.internal:3306/superbi_audit"/>
+            <property name="javax.persistence.jdbc.user" value="remote"/>
+            <property name="javax.persistence.jdbc.password" value="remote"/>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+            <property name="hibernate.connection.autocommit" value="true"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.id.new_generator_mappings" value="false"/>
+            <property name="hibernate.current_session_context_class" value="org.hibernate.context.internal.ThreadLocalSessionContext"/>
+
+            <property name="hibernate.connection.provider_class"
+              value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"/> <!-- hibernate 4.1.9 -->
+            <property name="hibernate.c3p0.acquireIncrement" value="3"/>
+            <property name="hibernate.c3p0.maxIdleTime" value="3600"/>
+            <property name="hibernate.c3p0.minPoolSize" value="1"/>
+            <property name="hibernate.c3p0.maxPoolSize" value="6"/>
+            <property name="hibernate.c3p0.maxStatements" value="20"/>
+            <property name="hibernate.c3p0.idleConnectionTestPeriod" value="1800"/> <!-- seconds -->
+            <property name="hibernate.c3p0.maxConnectionAge" value="1000"/>
+            <property name="hibernate.c3p0.maxIdleTimeExcessConnections" value="300"/>
+        </properties>
+    </persistence-unit>
+</persistence>

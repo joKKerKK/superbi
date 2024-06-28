@@ -1,0 +1,76 @@
+serviceAccount:
+  name: "superbi-brv2-ci"
+
+image:
+  fdp-superbi-brv2:
+    registry: container-registry.alm.fkcloud.in
+    repository: fdp-ssi/fdp-superbi-brv2
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  cfgsvc-dns-proxy:
+    registry: container-registry.alm.fkcloud.in
+    repository: hosts-populator/cfgsvc-dns-proxy
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v0.1.0"
+
+podAnnotations:
+  fcp.k8s.mtl/mtl-config-map: mtl-config
+  fcp.k8s.mtl/cosmos-jmx: enabled
+  fcp.k8s.mtl/cosmos-statsd: disabled
+  fcp.k8s.mtl/cosmos-tail: enabled
+
+serviceAnnotations:
+  fcp/app-id: prod-fdp-brv2
+  elb.fcp/name: prod-fdp-brv2-service
+  elb.fcp/backend-service: prod-fdp-brv2-service
+  elb.fcp/frontend-port: "80"
+  elb.fcp/backend-port: "21212"
+  elb.fcp/health-check-port: "21212"
+  elb.fcp/health-check-path: /health
+  elb.fcp/health-check-timeout: 1s
+  elb.fcp/health-check-interval: 5s
+  elb.fcp/load-balancing-algorithm: "leastconn"
+  elb.fcp/do-not-delete-vip: "true"
+
+podVolumes:
+  - name: app-config
+    configMap:
+      name: app-config
+  - name: hosts-populator-keys
+    configMap:
+      name: hosts-populator-keys
+  - name: logs-dir
+    emptyDir:
+      sizeLimit: "3Gi"
+
+configs:
+  hosts-populator-keys:
+    k8s-fpg-hp.conf: |-
+      prod-fdp-galaxy-hostnames
+      gcp-googleapis-endpoints-reporting
+
+sidecars:
+  cfgsvc-dns-proxy:
+    imageRef: cfgsvc-dns-proxy
+
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 8797
+      capabilities:
+        add:
+          - NET_BIND_SERVICE
+
+    volumeMounts:
+      - mountPath: /usr/local/hosts-populator/buckets
+        name: hosts-populator-keys
+
+    resources:
+      limits:
+        cpu: 50m
+        memory: 64Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi

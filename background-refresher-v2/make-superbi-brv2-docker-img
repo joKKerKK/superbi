@@ -1,0 +1,65 @@
+#!/bin/bash -ex
+
+function logmsg()
+{
+    echo "[`date`] $*"
+}
+
+if [ $# -ne 2 ];then
+    echo "Usage: $0 <DOCKER_HOST> <DOCKER_REGISTRY>"
+    exit 1
+fi
+
+if [ ! -z $1 ] && [ ! -z $2 ];then
+    export DOCKER_HOST="$1"
+    export DOCKER_REGISTRY="$2"
+fi
+
+LOCAL_DIR=$(pwd)
+INSTALL_BASE=./superbi-web
+PACKAGE="fdp-superbi-brv2"
+VERSION=$(date "+%Y%m%d%H%M%S")
+DOCKER_IMAGE_NAME="$PACKAGE:$VERSION"
+BASE_DIR="/usr/share/$PACKAGE"
+
+#Build and package jar
+#export JAVA_HOME="/usr/lib/jvm/j2sdk1.8-oracle"
+
+mvn clean install
+
+MVN_STATUS=$?
+[ $MVN_STATUS -eq 0 ] || exit $MVN_STATUS
+
+#Create deb directory and copy relevant artifacts from deb-pkg
+logmsg "creating deb directory"
+DOCKER_DIR="$LOCAL_DIR/$PACKAGE-$VERSION"
+DOCKER_BUILD_DIR="$LOCAL_DIR/docker"
+rm -rf $DOCKER_DIR
+mkdir -p $DOCKER_DIR
+
+# copy dart jar and resources
+logmsg "Copying dart jars and resources"
+mkdir -p "$DOCKER_DIR/usr/share/$PACKAGE/server/lib"
+mkdir -p "$DOCKER_DIR/etc/service/$PACKAGE"
+mkdir -p "$DOCKER_DIR/var/log/flipkart/$PACKAGE/server"
+mkdir -p "$DOCKER_DIR/var/log/flipkart/$PACKAGE/gc"
+mkdir -p "$DOCKER_DIR/var/log/flipkart/$PACKAGE/heap"
+mkdir -p "$DOCKER_DIR/var/log/flipkart/$PACKAGE/request"
+mkdir -p "$DOCKER_DIR/var/log/flipkart/$PACKAGE/audit"
+cp -r $LOCAL_DIR/target/background-refresher-v2.jar $DOCKER_DIR/usr/share/${PACKAGE}/server/lib
+cp $DOCKER_BUILD_DIR/superbi-brv2-run.sh $DOCKER_DIR/usr/share/${PACKAGE}/
+cp $DOCKER_BUILD_DIR/superbi-brv2-commons.sh $DOCKER_DIR/usr/share/${PACKAGE}/
+cp $DOCKER_BUILD_DIR/docker-start.sh $DOCKER_DIR/usr/share/${PACKAGE}/
+
+cp $DOCKER_BUILD_DIR/Dockerfile $DOCKER_DIR
+
+#creating deb file
+logmsg "Building debian ..."
+ls $DOCKER_DIR
+docker build -t $DOCKER_IMAGE_NAME $DOCKER_DIR
+docker tag $DOCKER_IMAGE_NAME $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME
+docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME
+
+#cleaning up docker directory
+logmsg "cleaning up docker directory"
+rm -rf $DOCKER_DIR
