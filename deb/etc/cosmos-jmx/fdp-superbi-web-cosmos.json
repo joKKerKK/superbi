@@ -1,0 +1,18 @@
+{
+  "servers": [
+    {
+      "prefix": "fdp-superbi-web",
+      "port": "21214",
+      "host": "___HOST___",
+      "process": "fdp-superbi-web-service",
+      "customTags": "env=___ENV___",
+      "queries": [
+        {
+          "obj": "*",
+          "saperator": "."
+        }
+      ],
+      "numQueryThreads": 2
+    }
+  ]
+}

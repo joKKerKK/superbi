@@ -1,0 +1,8 @@
+application: ___ENV___
+file: "/var/log/flipkart/fdp-superbi-web/access.log"
+requestLinePosition: 5
+statusCodePosition: 6
+sizePosition: 7
+responseTimePosition: 10
+multiplier: 1
+ignoreUrls: /health

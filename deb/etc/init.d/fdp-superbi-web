@@ -1,0 +1,69 @@
+#!/bin/bash
+
+source /usr/share/fdp-superbi-web/server/scripts/commons.sh
+command=$1
+
+case "$command" in
+    start)
+        sudo svc -u ${SERVICE_DIR}
+        LOG INFO "Started daemon. Logs are at ${STARTUP_LOG_FILE}"
+        ;;
+
+    stop)
+        LOG INFO "Stopping..."
+        sudo svc -d ${SERVICE_DIR}
+        LOG INFO "Daemon stopped..."
+        LOG INFO "Sleeping for 5 seconds"
+        sleep 5
+        LOG INFO "Checking if the process has stopped"
+        PID=`sudo -u${PACKAGE} lsof -i | head -2 | tail -1 | tr -s ' ' | cut -d ' ' -f 2`
+        if [ "$PID" != "" ]; then
+            echo "[WARN] Process seem to be still running with ${PID}"
+            $0 force-stop
+        fi
+        LOG INFO "Stopped successfully"
+        ;;
+
+    status)
+        PID=`sudo -u${PACKAGE} lsof -i | head -2 | tail -1 | tr -s ' ' | cut -d ' ' -f 2`
+        if [ "$PID" != "" ]; then
+            LOG INFO "${PACKAGE} server running at PID : $PID"
+        else
+            LOG INFO "${PACKAGE} server is not running"
+        fi
+        ;;
+
+    force-stop)
+        LOG WARN "Force killing..."
+        PID=`sudo -u${PACKAGE} lsof -i | head -2 | tail -1 | tr -s ' ' | cut -d ' ' -f 2`
+        sudo -u${PACKAGE} lsof -i | awk '{print $2}' | tail -n +2 | sort | uniq | xargs kill -9 $2
+        PID=`sudo -u${PACKAGE} lsof -i | head -2 | tail -1 | tr -s ' ' | cut -d ' ' -f 2`
+        if [ "$PID" != "" ]; then
+            LOG ERROR "Force killing failed!, Process still running at ${PID}"
+        else
+            LOG INFO "Force killed"
+        fi
+        ;;
+
+    restart)
+        $0 stop
+        sleep 3
+        $0 start $2
+        ;;
+
+    toggle_oor)
+        if [ -f "$HEALTH_CHECK_FLAG_FILE" ]; then
+            rm -f $HEALTH_CHECK_FLAG_FILE
+            LOG INFO "Node is brought back to rotation"
+        else
+            echo "" > $HEALTH_CHECK_FLAG_FILE
+            LOG INFO "Node is taken out of rotation"
+        fi
+        ;;
+
+    *)
+        LOG WARN "Option not chosen or invalid"
+        LOG USAGE "$0 (start (bucket/configuration_file_path)? | stop | force-stop | status| restart | toggle_oor | restart_with_local_bucket)"
+        exit 1
+        ;;
+esac

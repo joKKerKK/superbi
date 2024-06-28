@@ -1,0 +1,69 @@
+server:
+  type: "default"
+  requestLog:
+    appenders:
+    - type: "file"
+      currentLogFilename: "/var/log/flipkart/fdp-superbi-web/access.log"
+      archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/access-%i.log"
+      logFormat: "%h %l %u [%t] \"%r\" %s %b \"%i{Referer}\" \"%i{User-Agent}\" %D %reqAttribute{X-Request-Id}"
+      maxFileSize: "100MB"
+      archive: true
+      timeZone: "IST"
+      archivedFileCount: 10
+  adminMinThreads: 8
+  adminMaxThreads: 8
+  applicationConnectors:
+  - type: "http"
+    port: 21212
+    acceptorThreads: 1
+    selectorThreads: 1
+  adminConnectors:
+  - type: "http"
+    port: 21213
+    acceptorThreads: 1
+    selectorThreads: 1
+logging:
+  level: "INFO"
+  loggers:
+    io.dropwizard: "INFO"
+    org.hibernate.sql: "WARN"
+    org.hibernate.orm.deprecation: error
+    com.flipkart.fdp.superbi.web.logger.AuditFileLogger:
+      appenders:
+        - type: "file"
+          logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+          currentLogFilename: "/var/log/flipkart/fdp-superbi-web/audit/audit.log"
+          archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/audit/audit-%i.log"
+          archivedFileCount: 7
+          archive: true
+          timeZone: "IST"
+          maxFileSize: "10MiB"
+    com.flipkart.fdp.superbi.core.adaptor.DSQueryUtil:
+      appenders:
+        - type: "file"
+          logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %msg %n"
+          currentLogFilename: "/var/log/flipkart/fdp-superbi-web/server/serialization-error.log"
+          archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/server/serialization-error-%i.log"
+          archivedFileCount: 7
+          archive: true
+          timeZone: "IST"
+          maxFileSize: "10MiB"
+  appenders:
+  - type: "file"
+    currentLogFilename: "/var/log/flipkart/fdp-superbi-web/server/server.log"
+    archivedLogFilenamePattern: "/var/log/flipkart/fdp-superbi-web/server/server-%i.log"
+    maxFileSize: "100MB"
+    archive: true
+    timeZone: "IST"
+    archivedFileCount: 10
+    logFormat: "%-6level %X{X-Request-Id} [%d{ISO8601}] %logger{5} - %X{code} %msg %n"
+
+
+swagger:
+  resourcePackage: {{getv "/swagger.resourcePackage"}}
+
+environmentConfig:
+  env: {{getv "/environmentConfig.env"}}
+
+healthCheckConfig:
+  oorFlagFilePath: {{getv "/superbi.oorFlagFilePath"}}
